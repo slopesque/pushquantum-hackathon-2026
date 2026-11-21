@@ -60,3 +60,14 @@ suivis : Kitai 2020 (FMQA), Sciorilli 2025 (PCE).
 
 - **2026-11-21 · Graine des tours SA.** Graine du tour = seed·1 000 003 + r, comme les lots de B1 dans H0.
   Sinon les seeds 0, 1 et 2 partagent leurs tours.
+- **2026-11-21 · A priori du kit (β).** Le diagnostic de la FM seule sur des topologies aléatoires donnait
+  ρ ≈ 0,15, contre 0,17 pour le kit. On a ajouté un paramètre β à `learned_qubo` : objectif = FM normalisée
+  + β·objectif du kit (normalisé), puis + λ·pénalité. β = 0 redonne la FM seule. Réglé sur network12,
+  seed 0 : β = 0,5.
+- **2026-11-21 · Réglages de la FM.** lr = 0,003 et l2 = 1e-2 (au lieu de 0,01 et 1e-4 par défaut), sur
+  recommandation du diagnostic (surapprentissage sinon).
+- **2026-11-21 · Ablation supplémentaire.** `b1_sa_kit_p2` : B1 avec une pénalité de 2, équivalent à
+  « a priori du kit seul » (β = 0,5, λ = 1, sans FM), pour vérifier que le gain ne vient pas de β.
+- **2026-11-21 · PCE sur network24.** Cloud Qoro, `PolyEncoding` (33 qubits), simulation MPS de Maestro
+  (`max_bond_dimension` = 32), `quantum_rounds = every:10` (au lieu de every:5 sur network12) pour tenir le
+  plafond de 30 min. Sonde préalable : `h1.cloud_probe`.
