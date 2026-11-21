@@ -237,6 +237,12 @@ Chaque run écrit dans `results/portfolio/bench/<date>_<label>/` : `runs.csv` (u
 - `gap_vs_lambda.png` : un panneau par instance, le gap en fonction de $lambda$, une courbe par méthode.
   C'est là qu'on voit si une méthode tient quand le risque domine.
 - `time_by_case.png` : le temps moyen par exécution, en échelle log.
+- `size_vs_time.png` et `size_vs_gap.png` : la taille de l'instance (variables du QUBO officiel, échelle log)
+  en ordonnée, le temps ou le gap en abscisse, *un point par exécution*. Le *symbole* donne la méthode
+  (configuration d'optimisations), la *couleur* donne $lambda$, du bleu clair ($lambda = 0$) au bleu foncé
+  ($lambda = 10^(-2)$). Avec `plot_portfolio_bench.py --all`, *tous les runs* sont réunis sur le même
+  graphe : on voit chaque configuration se déplacer à mesure qu'on ajoute des optimisations, et pour quels
+  $lambda$.
 
 Au-delà de 48 cas, chaque graphe est découpé par taille d'instance (`gap_by_case_a050_t10.png`, …). Les
 méthodes reçoivent les couleurs d'une palette catégorielle validée pour le daltonisme, dans un ordre fixe,
@@ -503,6 +509,20 @@ $5 dot 10^(-4)$, 9,3 % à $10^(-3)$ et 44 % à $10^(-2)$. Aucun meilleur connu n
   image("figures/p4_known_gap_vs_lambda_a050_t10.png", width: 100%),
   caption: [a050_t10 : gap en fonction de $lambda$ pour chaque méthode. Les paires (`ls-pair`, `ls-full`)
     tiennent jusqu'à $10^(-4)$ puis décrochent ; à $10^(-2)$, toutes restent au portefeuille vide.],
+)
+
+#figure(
+  image("figures/p4_size_vs_gap.png", width: 100%),
+  caption: [Qualité selon la taille, tous les runs réunis (`plot_portfolio_bench.py --all`) : un point par
+    exécution, symbole = méthode, couleur = $lambda$. Pour a200 et a400, le gap se rapporte au meilleur score
+    trouvé, pas à un optimum (voir `notes.typ`).],
+)
+
+#figure(
+  image("figures/p4_size_vs_time.png", width: 100%),
+  caption: [Temps de calcul selon la taille, tous les runs réunis (symbole = méthode, couleur = $lambda$). Sur a050, les paires multiplient le temps
+    par 5 à 10 par rapport à `ls-single` (0,4 à 1,3 s au lieu de 0,08 à 0,14 s) ; les lots de 20
+    (`ls-full-b20`) le ramènent au niveau de `ls-single`. Sur a400_t15, `ls-full-b20` reste sous 10 s.],
 )
 
 *Sur a400_t15_orig* (36 165 variables QUBO, 6 000 entières), `ls-full-b20` donne les *premières solutions
