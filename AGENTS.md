@@ -88,8 +88,11 @@ pushquantum-hackathon-2026/
 ├── src/hackathon/           # Notre code réutilisable, installé en mode éditable par `uv sync`
 │   ├── referee.py                   # `from hackathon.referee import qt` : importe l'arbitre sans le copier
 │   ├── utils.py                     # .env, make_backend(), gap(), save_run(), git_hash()
-│   └── solvers/                     # Un module par problème : portfolio.py (branches portfolio/*),
-│                                    #   network.py (branches network/*). Code partagé dans utils.py.
+│   └── solvers/                     # Un sous-paquet par problème. Code partagé dans utils.py.
+│       ├── portfolio/               #   Branches portfolio/*
+│       │   ├── problem.py           #   Notre formulation : données, coefficients, objectif, .sol (P1)
+│       │   └── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
+│       └── network/                 #   Branches network/*
 ├── notebooks/               # Explorations (marimo de préférence, jupyter accepté)
 │                            #   Les copies des notebooks de référence y sont ignorées par git
 ├── scripts/                 # Runs reproductibles en CLI, par ex.
@@ -116,7 +119,7 @@ pushquantum-hackathon-2026/
 
 - **On explore, on visualise :** `notebooks/`. Un notebook importe depuis `hackathon.*` et ne contient
   pas de logique qui doive être réutilisée ailleurs.
-- **Ça marche et ça resservira :** on le déplace dans `src/hackathon/solvers/<problème>.py` (ou dans
+- **Ça marche et ça resservira :** on le déplace dans `src/hackathon/solvers/<problème>/` (ou dans
   `utils.py` si ça sert aux deux problèmes).
 - **Un run qu'on veut pouvoir rendre :** un script dans `scripts/` qui appelle les solveurs et termine par
   `save_run(...)`.
