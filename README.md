@@ -55,8 +55,23 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
 | `gap_by_case.png` | Gap de chaque méthode, cas par cas (meilleure seed) |
 | `gap_vs_lambda.png` | Gap en fonction de λ, un panneau par instance |
 | `time_by_case.png` | Temps moyen par exécution (échelle log) |
+| `size_vs_time.png` | **Taille de l'instance en fonction du temps** : un point par exécution, symbole = méthode, couleur = λ |
+| `size_vs_gap.png` | **Taille de l'instance en fonction du gap** : un point par exécution, symbole = méthode, couleur = λ |
 
-Au-delà de 48 cas, les graphes sont découpés par taille d'instance (`gap_by_case_a050_t10.png`…). Les
+**Voir l'effet de chaque optimisation : tous les runs sur un seul graphe.** Chaque méthode est une
+configuration d'optimisations (`ls-single` → `ls-block` → `ls-pair` → `ls-full`…) et garde sa couleur et son
+symbole ; la couleur donne λ, du bleu clair (λ = 0) au bleu foncé (λ = 1e-2). Chaque point est une
+exécution : on voit le nuage d'une méthode se déplacer quand on ajoute une optimisation, et pour quels λ :
+
+```bash
+uv run scripts/plot_portfolio_bench.py --all    # → results/portfolio/bench/all/size_vs_{time,gap}.png
+```
+
+`--all` réunit tous les runs de `results/portfolio/bench/` ; si un même cas a été exécuté plusieurs fois
+(même instance, λ, méthode et seed), seule l'exécution la plus récente compte. Sur le graphe de gap, un cas
+sans meilleur connu n'apparaît que si au moins deux méthodes y ont tourné.
+
+Au-delà de 48 cas, les autres graphes sont découpés par taille d'instance (`gap_by_case_a050_t10.png`…). Les
 PNG ne sont pas commités : ils se régénèrent depuis `runs.csv`.
 
 **Le gap** vaut `(score − meilleur connu) / |meilleur connu|` : 0 = égalité, négatif = record battu. Les
