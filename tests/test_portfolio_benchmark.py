@@ -57,5 +57,11 @@ def test_plots_with_several_methods(tmp_path):
     # Une deuxième « méthode » fictive, un peu meilleure, pour tester légende et comparaison.
     fake = [replace(r, method="fake", objective=r.objective - 500) for r in runs]
     paths = plot_all(runs + fake, tmp_path, "test")
-    assert {p.name for p in paths} == {"gap_by_case.png", "gap_vs_lambda.png", "time_by_case.png"}
+    assert {p.name for p in paths} == {
+        "gap_by_case.png",
+        "gap_vs_lambda.png",
+        "time_by_case.png",
+        "size_vs_time.png",
+        "size_vs_gap.png",
+    }
     assert all(p.stat().st_size > 10_000 for p in paths)

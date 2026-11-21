@@ -4,7 +4,9 @@ Trois graphes, tous construits à partir des exécutions (:class:`~.benchmark.Ru
 
 * ``gap_by_case.png`` : pour chaque cas, le gap du meilleur score de chaque méthode ;
 * ``gap_vs_lambda.png`` : le gap en fonction de λ, un panneau par instance ;
-* ``time_by_case.png`` : le temps moyen par cas et par méthode (échelle log).
+* ``time_by_case.png`` : le temps moyen par cas et par méthode (échelle log) ;
+* ``size_vs_time.png`` / ``size_vs_gap.png`` : la taille de l'instance en ordonnée, le temps ou le gap en
+  abscisse, une série (couleur + symbole) par méthode. Le plus parlant pour comparer des variantes.
 
 **Référence du gap.** Quand QOBLIB publie un meilleur connu (a010, a050), le gap s'y rapporte. Sinon
 (a200, a400), il se rapporte au meilleur score trouvé par l'ensemble des méthodes du graphe ; ces cas sont
@@ -21,6 +23,8 @@ from pathlib import Path
 from typing import Any, cast
 
 import matplotlib
+import matplotlib.ticker
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -287,6 +291,158 @@ def plot_time_by_case(runs: Sequence[Run], path: Path, label: str = "") -> Path:
     return path
 
 
+# Métriques disponibles pour l'axe horizontal de plot_size_vs_metric : (libellé, échelle).
+METRICS = {
+    "time": ("temps par exécution (s, échelle log)", "log"),
+    "gap": ("gap au meilleur connu (%, échelle symlog) — plus petit = mieux", "symlog"),
+}
+
+
+# Rampe séquentielle (bleu, du clair au foncé) pour λ : une grandeur ordonnée, donc une seule teinte.
+LAMBDA_RAMP = (
+    "#b7d3f6",
+    "#86b6ef",
+    "#5598e7",
+    "#3987e5",
+    "#256abf",
+    "#1c5cab",
+    "#104281",
+    "#0d366b",
+)
+
+
+def _lambda_colors(lams: Iterable[str]) -> dict[str, str]:
+    """Une couleur par λ présent, du plus clair (λ faible) au plus foncé (λ fort)."""
+    ordered = sorted(set(lams), key=lambda x: float(x))
+    if len(ordered) > len(LAMBDA_RAMP):
+        raise ValueError(f"au plus {len(LAMBDA_RAMP)} valeurs de λ par graphe")
+    # On étale les λ présents sur toute la rampe pour garder le contraste.
+    if len(ordered) == 1:
+        return {ordered[0]: LAMBDA_RAMP[-3]}
+    idx = np.linspace(0, len(LAMBDA_RAMP) - 1, len(ordered)).round().astype(int)
+    return {lam: LAMBDA_RAMP[k] for lam, k in zip(ordered, idx, strict=True)}
+
+
+def plot_size_vs_metric(
+    runs: Sequence[Run], path: Path, metric: str = "time", label: str = ""
+) -> Path:
+    """Un point par exécution : taille de l'instance (ordonnée) en fonction d'une métrique (abscisse).
+
+    * **Symbole** : la méthode de résolution (configuration d'optimisations).
+    * **Couleur** : la valeur de λ, du bleu clair (λ faible) au bleu foncé (λ fort).
+
+    Tous les runs passés en entrée sont sur le même graphe. La taille est le nombre de variables du QUBO
+    officiel, en échelle log ; les points d'une même taille sont légèrement décalés verticalement pour ne pas
+    se recouvrir. Pour le gap, un cas sans meilleur connu (a200, a400) se rapporte au meilleur score des
+    méthodes présentes, et n'est tracé que si au moins deux méthodes y ont tourné.
+    """
+    if metric not in METRICS:
+        raise ValueError(f"métrique inconnue : {metric} (disponibles : {sorted(METRICS)})")
+    xlabel, scale = METRICS[metric]
+    methods = _methods(runs)
+    colors = _lambda_colors(r.lam for r in runs)
+    refs = _references(summarize(runs)) if metric == "gap" else {}
+    if metric == "gap":
+        # Sans meilleur connu, la référence est le meilleur des méthodes présentes : elle n'a de sens que
+        # si au moins deux méthodes ont tourné sur le cas (sinon la méthode serait sa propre référence).
+        methods_per_case: dict[Case, set[str]] = {}
+        for r in runs:
+            methods_per_case.setdefault(r.case, set()).add(r.method)
+        refs = {
+            c: ref for c, ref in refs.items() if ref[1] or len(methods_per_case.get(c, ())) >= 2
+        }
+    rng = np.random.default_rng(0)  # décalage vertical reproductible
+
+    with plt.rc_context(cast(Any, STYLE)):
+        fig, ax = plt.subplots(figsize=(8.5, 5.5))
+        xs_all: list[float] = []
+        for k, method in enumerate(methods):
+            xs, ys, cs = [], [], []
+            for r in runs:
+                if r.method != method or not r.feasible:
+                    continue
+                if metric == "time":
+                    x = max(r.time_s, 1e-4)
+                elif r.case in refs:
+                    x = _gap_pct(r.objective, refs[r.case][0])
+                else:
+                    continue
+                xs.append(x)
+                ys.append(r.n_vars_qubo * 10 ** rng.uniform(-0.04, 0.04))
+                cs.append(colors[r.lam])
+            xs_all += xs
+            ax.scatter(
+                xs,
+                ys,
+                s=26,
+                c=cs,
+                marker=MARKERS[k],
+                alpha=0.85,
+                edgecolors=SURFACE,
+                linewidths=0.5,
+                zorder=3,
+            )
+        sizes = sorted({(r.n_vars_qubo, _size(r.case)) for r in runs})
+        ax.set_yscale("log")
+        ax.set_yticks(
+            [n for n, _ in sizes],
+            [f"{name}  ({n:,} var.)".replace(",", " ") for n, name in sizes],
+        )
+        ax.minorticks_off()
+        if scale == "symlog":
+            ax.set_xscale("symlog", linthresh=1.0)
+            ax.axvline(0, color=TEXT_SECONDARY, linewidth=1, zorder=1)
+            low = min(xs_all, default=0.0)
+            ax.set_xlim(left=low * 1.3 if low < 0 else -0.05)
+            ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, _: f"{x:g}"))
+        else:
+            ax.set_xscale(scale)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel("taille de l'instance (variables du QUBO officiel, échelle log)")
+        title = {"time": "Temps de calcul selon la taille", "gap": "Qualité selon la taille"}[
+            metric
+        ]
+        ax.set_title(_title(title, label), loc="left")
+
+        # Deux légendes : les symboles (méthodes, en gris) et les couleurs (λ).
+        method_handles = [
+            Line2D(
+                [], [], color=TEXT_SECONDARY, marker=MARKERS[k], linestyle="", markersize=6, label=m
+            )
+            for k, m in enumerate(methods)
+        ]
+        lam_handles = [
+            Line2D([], [], color=c, marker="s", linestyle="", markersize=7, label=f"λ = {lam}")
+            for lam, c in colors.items()
+        ]
+        first = ax.legend(
+            handles=method_handles,
+            title="méthode (symbole)",
+            loc="upper left",
+            bbox_to_anchor=(1.01, 1.0),
+            title_fontsize=8,
+        )
+        ax.add_artist(first)
+        second = ax.legend(
+            handles=lam_handles,
+            title="λ (couleur)",
+            loc="lower left",
+            bbox_to_anchor=(1.01, 0.0),
+            title_fontsize=8,
+        )
+        note = fig.text(
+            0.01,
+            0.005,
+            "un point = une exécution (un cas, une seed)",
+            fontsize=7,
+            color=TEXT_SECONDARY,
+        )
+        fig.tight_layout()
+        fig.savefig(path, dpi=200, bbox_inches="tight", bbox_extra_artists=[first, second, note])
+        plt.close(fig)
+    return path
+
+
 MAX_CASES_PER_FIGURE = 48
 
 
@@ -320,4 +476,8 @@ def plot_all(runs: Sequence[Run], out_dir: Path, label: str = "") -> list[Path]:
             plot_gap_vs_lambda(rs, out_dir / f"gap_vs_lambda{suffix}.png", sub),
             plot_time_by_case(rs, out_dir / f"time_by_case{suffix}.png", sub),
         ]
+    paths += [
+        plot_size_vs_metric(runs, out_dir / f"size_vs_{metric}.png", metric, label)
+        for metric in METRICS
+    ]
     return [p for p in paths if p is not None]
