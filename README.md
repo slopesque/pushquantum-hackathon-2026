@@ -91,6 +91,21 @@ Détails (fonctionnement, conventions) : `AGENTS.md`, section *Benchmarks*, et
 
 ## Résultats
 
-| Problème | Instance | Variables | Qubits max | Score | Best known | Gap | Run |
-|---|---|---|---|---|---|---|---|
-| | | | | | | | |
+Meilleures solutions rendues, validées par l'arbitre officiel. « — » : aucun meilleur connu publié (nous sommes
+les premiers sur ces instances). Méthodes classiques pour l'instant : 0 qubit.
+
+| Problème | Instance | λ | Variables (QUBO / entières) | Qubits max | Score | Meilleur connu | Gap | Méthode | Fichier |
+|---|---|---|---|---|---:|---|---|---|---|
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 0 | 36 165 / 6 000 | 0 | −4 194 749 | — | — | `ls-full-b20` | [`20261121T165941Z_…`](results/portfolio/20261121T165941Z_po_a400_t15_orig_b100_l0.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 1e-6 | 36 165 / 6 000 | 0 | −4 147 927 | — | — | `ls-full-b20` | [`20261121T165958Z_…`](results/portfolio/20261121T165958Z_po_a400_t15_orig_b100_l1e-6.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 1e-5 | 36 165 / 6 000 | 0 | −3 898 367 | — | — | `ls-full-b20` | [`20261121T170016Z_…`](results/portfolio/20261121T170016Z_po_a400_t15_orig_b100_l1e-5.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 5e-5 | 36 165 / 6 000 | 0 | −3 553 299 | — | — | `ls-full-b20` | [`20261121T170033Z_…`](results/portfolio/20261121T170033Z_po_a400_t15_orig_b100_l5e-5.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 1e-4 | 36 165 / 6 000 | 0 | −3 406 114 | — | — | `ls-full-b20` | [`20261121T170050Z_…`](results/portfolio/20261121T170050Z_po_a400_t15_orig_b100_l1e-4.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 5e-4 | 36 165 / 6 000 | 0 | −3 049 528 | — | — | `ls-full-b20` | [`20261121T170107Z_…`](results/portfolio/20261121T170107Z_po_a400_t15_orig_b100_l5e-4.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 1e-3 | 36 165 / 6 000 | 0 | −2 797 435 | — | — | `ls-full-b20` | [`20261121T170124Z_…`](results/portfolio/20261121T170124Z_po_a400_t15_orig_b100_l1e-3.sol) |
+| Portefeuille | `po_a400_t15_orig` (B = 100) | 1e-2 | 36 165 / 6 000 | 0 | −374 851 | — | — | `ls-full-b20` | [`20261121T170141Z_…`](results/portfolio/20261121T170141Z_po_a400_t15_orig_b100_l1e-2.sol) |
+
+Chaque `.sol` a un `.json` à côté (méthode, paramètres, seed, commit git) ; le benchmark qui l'a produit est
+dans `results/portfolio/bench/20261121T165825Z_p4-a400/`. Sur les instances avec meilleur connu (a010, a050), la
+recherche locale `ls-full` égale le meilleur connu sur 63 des 128 cas et s'en approche à moins de 1 % sur 95
+(`results/portfolio/bench/20261121T165623Z_p4-known/summary.md`).
