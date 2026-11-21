@@ -59,6 +59,7 @@ def h1_fm(
     *,
     rank: int = 8,
     lam: float = 1.0,
+    beta: float = 0.0,
     target: str = "rank",
     n0_frac: float = 0.2,
     sa_reads: int = 100,
@@ -138,7 +139,7 @@ def h1_fm(
     def diagnose(suffix: str) -> None:
         if testset is None or fm is None:
             return
-        _, obj = learned_qubo(fm, demand, lam)
+        _, obj = learned_qubo(fm, demand, lam, beta)
         m = surrogate_metrics(obj, testset[0], testset[1], n)
         out[f"spearman_rho{suffix}"] = _f(m.get("spearman_rho"))
         out[f"top10_precision{suffix}"] = _f(m.get("top10_precision"))
@@ -171,7 +172,7 @@ def h1_fm(
                 from h1 import pce
 
                 qsampler = pce.make_pce_sampler(**quantum)
-            full, _ = learned_qubo(fm, demand, lam)
+            full, _ = learned_qubo(fm, demand, lam, beta)
             t0 = time.perf_counter()
             batch = (qsampler if use_q else sa)(full, seed * 1_000_003 + r)
             out["sample_time_s"] += time.perf_counter() - t0

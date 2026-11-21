@@ -23,6 +23,7 @@ def build_params(args: argparse.Namespace) -> dict[str, Any]:
     params: dict[str, Any] = {
         "rank": args.rank,
         "lam": args.lam,
+        "beta": args.beta,
         "target": args.target,
         "n0_frac": args.n0_frac,
         "sa_reads": args.sa_reads,
@@ -54,6 +55,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--method", choices=METHODS, default="h1_sa_fm")
     p.add_argument("--rank", type=int, default=8)
     p.add_argument("--lam", type=float, default=1.0)
+    p.add_argument("--beta", type=float, default=0.0, help="poids de l'a priori du kit")
     p.add_argument("--target", default="rank")
     p.add_argument("--n0-frac", type=float, default=0.2)
     p.add_argument("--sa-reads", type=int, default=100)

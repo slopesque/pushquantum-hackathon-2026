@@ -157,16 +157,19 @@ class FactorizationMachine:
 
 
 def learned_qubo(
-    fm: FactorizationMachine, demand: np.ndarray, lam: float
+    fm: FactorizationMachine, demand: np.ndarray, lam: float, beta: float = 0.0
 ) -> tuple[dimod.BinaryQuadraticModel, dimod.BinaryQuadraticModel]:
-    """``(full, objective)`` : objectif FM sans offset normalisé à max|coeff| = 1, puis + λ·pénalité."""
+    """``(full, objective)`` : objectif FM sans offset normalisé à max|coeff| = 1, plus β·objectif du
+    kit (a priori, lui aussi à max|coeff| = 1 ; β = 0 : FM seule), puis + λ·pénalité."""
     objective = fm.to_bqm()
     objective.offset = 0.0
     lin, (_, _, quad), _ = objective.to_numpy_vectors()
     scale = max(np.abs(lin).max(initial=0.0), np.abs(quad).max(initial=0.0))
     if scale > 0:
         objective.scale(1.0 / scale)
-    penalty = qt.build_network_qubo(demand)[1]
+    kit, penalty, _ = qt.build_network_qubo(demand)
+    if beta:
+        objective.update(kit * beta)
     full = objective.copy()
     full.update(penalty * lam)
     return full, objective
