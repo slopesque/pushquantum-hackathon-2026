@@ -91,14 +91,18 @@ pushquantum-hackathon-2026/
 │   └── solvers/                     # Un sous-paquet par problème. Code partagé dans utils.py.
 │       ├── portfolio/               #   Branches portfolio/*
 │       │   ├── problem.py           #   Notre formulation : données, coefficients, objectif, .sol (P1)
-│       │   └── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
+│       │   ├── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
+│       │   ├── benchmark.py         #   Grille des cas, meilleurs connus, registre des méthodes (P3)
+│       │   └── plots.py             #   Graphes des benchmarks (P3)
 │       └── network/                 #   Branches network/*
 ├── notebooks/               # Explorations (marimo de préférence, jupyter accepté)
 │                            #   Les copies des notebooks de référence y sont ignorées par git
-├── scripts/                 # Runs reproductibles en CLI, par ex.
-│                            #   `uv run scripts/run_portfolio.py --instance po_a010_t10_orig --seed 0`
-├── results/                 # Sorties des runs, COMMITÉES
+├── scripts/                 # Runs reproductibles en CLI
+│   ├── bench_portfolio.py           # Benchmark de méthodes (+ validation et sauvegarde des .sol)
+│   └── plot_portfolio_bench.py      # Retracer / comparer des benchmarks
+├── results/                 # Sorties des runs, COMMITÉES (sauf les PNG des benchmarks)
 │   ├── portfolio/                   # <timestamp>_<nom officiel>.sol + .json de métadonnées
+│   │   └── bench/                   #   Un dossier par benchmark : runs.csv, summary.md, meta.json
 │   └── network/
 ├── formalisations/          # Documents Typst (PDF), même setup que nos autres projets
 │   ├── justfile                     # `just portfolio`, `just all`, `just preview <fichier>`, `just clean`
@@ -139,6 +143,51 @@ Le nom officiel du `.sol` doit être conservé, car l'arbitre en déduit l'insta
 - network : `network<NN>.sol` (par ex. `network12.sol`).
 
 Vérifier un fichier avant de le rendre : voir la section *Scoring* de `references/README.md`.
+`save_run` préfixe le nom par un horodatage : **le retirer au moment de rendre le fichier**.
+
+### Benchmarks (portefeuille)
+
+Toute nouvelle méthode s'enregistre avec `@register("nom")` (`solvers/portfolio/benchmark.py`) et se mesure
+avec le banc d'essai, **jamais au cas par cas** :
+
+```bash
+uv run scripts/bench_portfolio.py --set dev --methods empty ls --seeds 3 --time 10 --label essai
+uv run scripts/bench_portfolio.py --set full --methods ls --save-sol   # valide + sauvegarde les .sol
+uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/portfolio/bench/<run2> \
+    --out results/portfolio/bench/compare --label "run1 vs run2"
+```
+
+- Jeux de cas (`--set`) : `dev` (12 cas, quelques minutes), `a010`, `a050`, `known` (avec meilleur connu),
+  `large` (a200 + a400), `a400`, `full` (256 cas).
+- Sorties : `results/portfolio/bench/<date>_<label>/` avec `runs.csv`, `summary.md`, `meta.json` et les
+  graphes PNG (`gap_by_case`, `gap_vs_lambda`, `time_by_case`). On commite le CSV, le résumé et les
+  métadonnées ; les PNG sont ignorés par git et se régénèrent depuis `runs.csv`. Une figure à garder est
+  copiée dans `formalisations/portfolio/figures/`.
+- Seul `--save-sol` utilise l'arbitre, pour valider les `.sol` avant de les enregistrer.
+
+**Comment ça marche** (`benchmark.py`, `plots.py`, `scripts/bench_portfolio.py`) :
+
+1. **Cas.** Un `Case` = une instance + un λ ; le budget en découle (`BUDGET_BY_ASSETS`). `SETS` regroupe
+   les jeux prédéfinis ; `grid()` en construit d'autres.
+2. **Données.** `ProblemCache` charge chaque instance une seule fois (cache disque `data/qoblib/`) et
+   construit un `PortfolioProblem` par λ.
+3. **Méthodes.** `METHODS` est un registre nom → fonction `(problem, rng, time_limit) → v`, rempli par
+   `@register("nom")`. Le module de la méthode doit être importé par `benchmark.py` (ou par le script)
+   pour qu'elle soit enregistrée. `rng = np.random.default_rng(seed)` : un run est reproductible à seed
+   égale. La méthode doit respecter `time_limit` et rendre une solution **faisable**.
+4. **Exécution.** `run_benchmark` lance chaque (cas, méthode, seed), chronomètre, note la solution avec
+   **notre** modèle (`problem.objective`, `is_feasible`) et calcule le gap au meilleur connu
+   (`best_known_table()`, lue une fois dans le README de QOBLIB). Un `Run` par exécution.
+5. **Agrégation.** `summarize` regroupe par (cas, méthode) : meilleur score faisable, médiane, gaps.
+6. **Sorties.** Le script écrit `runs.csv` (`write_csv` / `read_csv` font l'aller-retour), `summary.md`,
+   `meta.json`, puis les graphes (`plot_all`).
+7. **Validation finale** (`--save-sol` seulement). Pour chaque cas, la meilleure solution est écrite en
+   `.sol` (`problem.solution_text`), relue et notée par l'arbitre ; si l'arbitre ne confirme pas le score,
+   le script s'arrête. Sinon le fichier est enregistré par `save_run`.
+
+Conventions des graphes (`plots.py`) : couleurs de la palette catégorielle validée (daltonisme), attribuées
+aux méthodes dans l'ordre d'apparition, plus une forme de marqueur par méthode ; au plus 8 méthodes par
+graphe. Un cas sans meilleur connu est marqué † et son gap est relatif au meilleur score du graphe.
 
 ## 3. Environnement et commandes
 
