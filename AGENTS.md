@@ -162,9 +162,13 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
 - Jeux de cas (`--set`) : `dev` (12 cas, quelques minutes), `a010`, `a050`, `known` (avec meilleur connu),
   `large` (a200 + a400), `a400`, `full` (256 cas).
 - Sorties : `results/portfolio/bench/<date>_<label>/` avec `runs.csv`, `summary.md`, `meta.json` et les
-  graphes PNG (`gap_by_case`, `gap_vs_lambda`, `time_by_case`). On commite le CSV, le résumé et les
-  métadonnées ; les PNG sont ignorés par git et se régénèrent depuis `runs.csv`. Une figure à garder est
-  copiée dans `formalisations/portfolio/figures/`.
+  graphes PNG (`gap_by_case`, `gap_vs_lambda`, `time_by_case`, et `size_vs_time` / `size_vs_gap` : taille
+  de l'instance en fonction du temps ou du gap, un point par exécution, symbole = méthode, couleur = λ).
+  On commite le CSV, le résumé et les métadonnées ; les PNG sont ignorés par git et se régénèrent depuis
+  `runs.csv`. Une figure à garder est copiée dans `formalisations/portfolio/figures/`.
+- Vue d'ensemble de toutes les optimisations : `uv run scripts/plot_portfolio_bench.py --all` réunit tous les
+  runs sur un seul graphe (`results/portfolio/bench/all/`). Une méthode = une configuration d'optimisations :
+  donner un nom distinct à chaque nouvelle variante pour qu'elle ait son propre symbole.
 - Seul `--save-sol` utilise l'arbitre, pour valider les `.sol` avant de les enregistrer.
 
 **Comment ça marche** (`benchmark.py`, `plots.py`, `scripts/bench_portfolio.py`) :
