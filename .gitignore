@@ -10,3 +10,6 @@ __pycache__/
 
 # Virtual environments
 .venv/
+
+# Our runs are kept: .sol + .json metadata under results/
+!results/**/*.sol
