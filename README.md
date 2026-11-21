@@ -38,7 +38,7 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
 | Option | Rôle | Défaut |
 |---|---|---|
 | `--set` | Jeu de cas : `dev` (12), `a010`, `a050`, `known` (128, avec meilleur connu), `large` (128, a200 + a400), `a400` (8), `full` (256) | `dev` |
-| `--methods` | Une ou plusieurs méthodes enregistrées (`empty`, …) | `empty` |
+| `--methods` | Une ou plusieurs méthodes enregistrées (voir ci-dessous) | `empty` |
 | `--seeds` | Nombre de seeds par cas (0, 1, …) | 3 |
 | `--time` | Limite de temps par exécution, en secondes | 10 |
 | `--label` | Nom du run (dossier, titres des graphes) | méthodes + jeu |
@@ -63,8 +63,19 @@ PNG ne sont pas commités : ils se régénèrent depuis `runs.csv`.
 meilleurs connus viennent de la table QOBLIB (a010 et a050). Pour a200 et a400, où rien n'est publié, les
 graphes se rapportent au meilleur score trouvé par les méthodes comparées (cas marqués †).
 
+**Méthodes disponibles** (`src/hackathon/solvers/portfolio/methods.py`) :
+
+| Méthode | Principe |
+|---|---|
+| `empty` | Ne rien détenir : repère plancher (score −100 × jours) |
+| `ls-single` | Recherche locale, mouvements ±1 sur une case : l'équivalent de celle du kit |
+| `ls-block` | + changements sur des blocs de jours consécutifs |
+| `ls-pair` | + paires couvertes (actions corrélées ou anti-corrélées) sur des blocs de jours |
+| `ls-full` | + échanges d'une unité entre deux actions (budget saturé) : la meilleure à ce jour sur a010/a050 |
+| `ls-full-b20` | `ls-full` en appliquant 20 mouvements par passe : bien plus rapide, meilleure sur a400 |
+
 **Ajouter une méthode** : une fonction `(problème, rng, limite de temps) → solution` enregistrée par un
-décorateur. Elle devient aussitôt utilisable avec `--methods`.
+décorateur dans `methods.py`. Elle devient aussitôt utilisable avec `--methods`.
 
 ```python
 from hackathon.solvers.portfolio.benchmark import register
