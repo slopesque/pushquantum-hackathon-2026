@@ -93,6 +93,7 @@ pushquantum-hackathon-2026/
 │       │   ├── problem.py           #   Notre formulation : données, coefficients, objectif, .sol (P1)
 │       │   ├── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
 │       │   ├── local_search.py      #   Recherche locale : blocs, paires, échanges (P4)
+│       │   ├── lns.py               #   LNS : fenêtres, QUBO à signe fixé, sous-solveurs (enum, SA, QAOA, PCE) (P7)
 │       │   ├── methods.py           #   Méthodes enregistrées pour le banc d'essai (ls-single, ls-full…)
 │       │   ├── benchmark.py         #   Grille des cas, meilleurs connus, registre des méthodes (P3)
 │       │   └── plots.py             #   Graphes des benchmarks (P3)
@@ -114,6 +115,7 @@ pushquantum-hackathon-2026/
 │   └── portfolio/
 │       ├── pipeline_base.typ        # Pipeline de résolution du kit Qoro, étape par étape
 │       ├── pistes.typ               # Pistes explorées (P1–P10) et leur état : À TENIR À JOUR
+│       ├── lns.typ                  # LNS expliqué et formalisé, expériences et résultats (P7, P8)
 │       └── notes.typ                # Journal : constats, mises en garde, questions ouvertes (daté)
 │                                    #   PDF générés dans formalisations/out/ (ignoré par git)
 ├── tests/                   # pytest : l'arbitre reproduit les références, nos .sol sont valides
@@ -160,7 +162,7 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
     --out results/portfolio/bench/compare --label "run1 vs run2"
 ```
 
-- Jeux de cas (`--set`) : `dev` (12 cas, quelques minutes), `a010`, `a050`, `known` (avec meilleur connu),
+- Jeux de cas (`--set`) : `dev` (12 cas, quelques minutes), `hard` (9 cas à grand λ), `a010`, `a050`, `known` (avec meilleur connu),
   `large` (a200 + a400), `a400`, `full` (256 cas).
 - Sorties : `results/portfolio/bench/<date>_<label>/` avec `runs.csv`, `summary.md`, `meta.json` et les
   graphes PNG (`gap_by_case`, `gap_vs_lambda`, `time_by_case`, et `size_vs_time` / `size_vs_gap` : taille
