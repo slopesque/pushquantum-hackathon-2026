@@ -58,7 +58,7 @@ Le jury juge deux choses : *l'échelle* (taille de l'instance, qubits du plus gr
     [P1. Encodage entier $v in {-3..3}$], [Réduire le problème], [#fait],
     [P2. Évaluateur incrémental], [Passer à l'échelle], [#fait],
     [P3. Harnais de test], [Mesurer], [#fait],
-    [P4. Recherche locale rapide + mouvements par paires], [Baseline classique], [#afaire],
+    [P4. Recherche locale rapide + mouvements par paires], [Baseline classique], [#fait],
     [P5. Métaheuristiques (SA, tabou) en entiers], [Baseline forte], [#afaire],
     [P6. Solveur exact (SCIP) sur petites instances], [Bornes, contrôle], [#afaire],
     [P7. LNS quantique, QUBO à signe fixé (2 bits/case)], [Part quantique], [#afaire],
@@ -375,6 +375,160 @@ partenaires de chaque action à ceux qui la couvrent le mieux.
   - Sur des actions réelles, les vraies anti-corrélations sont rares (tout suit plus ou moins le marché) :
     $cal(A)(i)$ sera probablement court. À vérifier sur les données.
 ]
+
+=== Formalisation de l'évaluation des mouvements
+
+On fixe une solution faisable $v$ et on note, pour une case $(t, i)$ et un signe $s in {+1, -1}$,
+$v' = v_(t,i) + s$. Les quantités suivantes ne dépendent que de la case et du signe ; elles sont toutes
+calculées en une fois, en $O(T n)$.
+
+#definition(title: "Termes élémentaires")[
+  - *Terme de nœud* (risque propre, rendement, coût du court, frais d'extrémité) :
+    $ b_s (t, i) = & s (G_t v_t)_i + R_t (i, i) - s "ret"_(t,i) \
+      & + "sc"_(t,i) (max(-v', 0) - max(-v_(t,i), 0)) \
+      & + [t = 0] "tc"_(0,i) (|v'| - |v_(0,i)|) \
+      & + [t = T-1] "tc"_(T-1,i) (|v'| - |v_(T-1,i)|) , $
+    où $G_t = R_t + R_t^top$ et $[dot]$ vaut 1 si la condition est vraie, 0 sinon.
+  - *Frais d'entrée et de sortie* : avec $delta_t = v_(t,i) - v_(t-1,i)$ et la transition $t-1 -> t$
+    facturée seulement pour $1 <= t <= T-2$,
+    $ phi^"in"_s (t, i) & = [1 <= t <= T-2] "tc"_(t,i) (|delta_t + s| - |delta_t|) , \
+      phi^"out"_s (t, i) & = [t + 1 <= T-2] "tc"_(t+1,i) (|delta_(t+1) - s| - |delta_(t+1)|) . $
+  - *Intérêts* : pour une variation $Delta n in {-2, dots, 2}$ de la position nette du jour $t$,
+    $ iota_t (Delta n) = I(C - "net"_t) - I(C - "net"_t - Delta n) , $
+    où $I$ donne les intérêts gagnés pour un slack de cash.
+]
+
+#theorem(title: "Variation d'un bloc")[
+  Le mouvement « $v_(t,i) += s$ pour tout $t in [t_1, t_2]$ » change l'objectif de
+  $ Delta_"bloc" (i, s, t_1, t_2) = sum_(t = t_1)^(t_2) (b_s (t, i) + iota_t (s))
+    + phi^"in"_s (t_1, i) + phi^"out"_s (t_2, i) . $
+  Il est faisable si et seulement si, pour tout $t in [t_1, t_2]$ :
+  $|v_(t,i) + s| <= 3$, $"total"_t + |v_(t,i) + s| - |v_(t,i)| <= B$ et
+  $"net"_(min) <= "net"_t + s <= "net"_(max)$.
+]
+#proof[
+  Le risque, le rendement, le coût du court et les intérêts sont des sommes de termes d'un seul jour ; le
+  risque du jour $t$ varie de $s (G_t v_t)_i + s^2 R_t (i, i)$ et $s^2 = 1$. Pour les frais de transition, si
+  $t - 1$ et $t$ sont tous deux dans le bloc, $v_(t,i) - v_(t-1,i)$ ne change pas : seules les transitions
+  qui entrent dans le bloc (au jour $t_1$) et qui en sortent (au jour $t_2 + 1$) varient. Les frais
+  d'extrémité ne varient que si $t_1 = 0$ ou $t_2 = T - 1$ ; ils sont comptés dans $b_s$. Les contraintes
+  sont journalières.
+]
+
+Le mouvement simple est le cas $t_1 = t_2$. Avec les sommes cumulées
+$S(t) = sum_(u < t) (b_s (u, i) + iota_u (s))$, chaque bloc coûte $S(t_2 + 1) - S(t_1)$ : les
+$O(T^2 n)$ blocs s'évaluent d'un coup.
+
+#theorem(title: "Variation d'une paire sur un bloc")[
+  Pour deux actions $i != j$ et des signes $s_i, s_j$, le mouvement appliqué aux deux sur $[t_1, t_2]$
+  change l'objectif de
+  $ Delta_"paire" = & sum_(t = t_1)^(t_2) (b_(s_i) (t, i) + b_(s_j) (t, j) + s_i s_j G_t (i, j)
+      + iota_t (s_i + s_j)) \
+    & + phi^"in"_(s_i) (t_1, i) + phi^"out"_(s_i) (t_2, i)
+      + phi^"in"_(s_j) (t_1, j) + phi^"out"_(s_j) (t_2, j) . $
+  Il est faisable si, chaque jour du bloc, les deux cases restent dans ${-3, dots, 3}$, le budget tient
+  avec la somme des deux variations de $|v|$, et la position nette $"net"_t + s_i + s_j$ reste dans ses
+  bornes.
+]
+#proof[
+  Comme pour un bloc, jour par jour. Le seul terme qui couple $i$ et $j$ est le risque : pour
+  $d = s_i e_i + s_j e_j$, $(v + d)^top R (v + d) - v^top R v = d^top G v + d^top R d$, et
+  $d^top R d = R(i, i) + R(j, j) + s_i s_j (R(i, j) + R(j, i))$. Les intérêts dépendent de la variation
+  totale de la position nette, $s_i + s_j$, et non de chaque variation séparément.
+]
+
+L'*échange* est la paire d'un seul jour où $s_i = -"sgn"(v_(t,i))$ réduit $|v_(t,i)|$ et où $j$ parcourt
+*toutes* les actions (et non seulement les partenaires).
+
+#definition(title: "Descente par lots")[
+  Une *passe* évalue tous les mouvements des voisinages choisis, retient les mouvements améliorants
+  ($Delta < 0$), les trie par $Delta$ croissant, puis les parcourt : chacun est réévalué *exactement* sur la
+  solution courante et appliqué s'il est encore faisable et améliorant, jusqu'à `batch` mouvements. La
+  descente s'arrête quand une passe n'applique rien (optimum local) ou quand la limite de temps est atteinte.
+  `batch = 1` est la descente « meilleur mouvement d'abord ».
+]
+
+*Coût d'une passe :* $O(T^2 n)$ pour les blocs, $O(4 T^2 n k)$ pour les paires ($k$ partenaires par action),
+$O(2 T B n)$ pour les échanges (au plus $B$ cases détenues par jour), plus $O(n)$ par mouvement appliqué
+(mise à jour de $G_t v_t$). Sur a400_t15 : environ $10^5$ blocs, $5 dot 10^6$ paires et $10^6$ échanges par
+passe.
+
+=== Mise en œuvre
+
+#keybox(title: "Implémenté")[
+  `src/hackathon/solvers/portfolio/local_search.py`, fonction `local_search(state, neighborhoods, …)`.
+  - *Voisinages :* `block` (le mouvement simple en est le cas d'un seul jour), `pair` (paires couvertes sur un
+    bloc de jours, partenaires $cal(C)(i)$ et $cal(A)(i)$ calculés sur la matrice de risque moyennée sur la
+    période, $k = 15$), `swap` (échange sur un jour, avec *n'importe quelle* autre action).
+  - *Évaluation vectorisée :* à chaque passe, tous les mouvements d'un voisinage sont évalués d'un coup. Pour
+    un bloc $[t_1, t_2]$, la variation est une somme cumulée des termes de chaque jour, plus les frais
+    d'entrée au jour $t_1$ et de sortie au jour $t_2 + 1$ : à l'intérieur du bloc, les écarts entre jours
+    consécutifs ne changent pas. Une paire ajoute le terme croisé $s_i s_j G_t (i, j)$ et l'effet joint sur
+    les intérêts du jour.
+  - *Application :* on applique les meilleurs mouvements améliorants, chacun revérifié exactement
+    (`PortfolioState.delta`) juste avant. Le paramètre `batch` fixe combien on en applique avant de tout
+    réévaluer ; `batch = 1` est la descente « meilleur mouvement d'abord ».
+  - *Méthodes enregistrées* (`methods.py`), toutes partant du portefeuille vide et déterministes :
+    `ls-single` (blocs d'un jour : l'équivalent du kit), `ls-block`, `ls-pair` (blocs + paires), `ls-full`
+    (blocs + paires + échanges) et `ls-full-b20` (idem, `batch = 20`).
+  - *Tests* (`tests/test_portfolio_local_search.py`) : chaque mouvement évalué en vectorisé a exactement la
+    variation et la faisabilité de l'évaluation exacte.
+]
+
+*Contrôle de cohérence.* En mouvements simples avec `batch = 1`, on retrouve *exactement* le score de la
+recherche locale du kit sur a010_t10_orig, $lambda = 10^(-4)$ : $-69 thin 372$.
+
+=== Résultats
+
+Sur les 128 cas avec un meilleur connu (a010 et a050, jeu `known`, 104 s pour les 6 méthodes) :
+
+#single_column_table(
+  headers: ("Méthode", "Gap moyen", "Gap médian", "= meilleur connu", "< 1 %", "Temps moyen"),
+  content: (
+    [`empty`], [92,0 %], [99,4 %], [8], [8], [0 s],
+    [`ls-single`], [10,2 %], [0,19 %], [16], [80], [0,05 s],
+    [`ls-block`], [20,4 %], [16,2 %], [8], [8], [0,03 s],
+    [`ls-pair`], [7,7 %], [0,90 %], [43], [68], [0,34 s],
+    [`ls-full`], [7,2 %], [0,00 %], [*63*], [*95*], [0,32 s],
+    [`ls-full-b20`], [7,2 %], [0,00 %], [62], [92], [0,06 s],
+  ),
+  false,
+  [Recherche locale depuis le portefeuille vide, 128 cas (`results/portfolio/bench/…_p4-known/`).],
+)
+
+Gap moyen de `ls-full` selon $lambda$ : 0 % jusqu'à $10^(-5)$, 0,2 % à $5 dot 10^(-5)$ et $10^(-4)$, 3,4 % à
+$5 dot 10^(-4)$, 9,3 % à $10^(-3)$ et 44 % à $10^(-2)$. Aucun meilleur connu n'est battu pour l'instant.
+
+#figure(
+  image("figures/p4_known_gap_vs_lambda_a050_t10.png", width: 100%),
+  caption: [a050_t10 : gap en fonction de $lambda$ pour chaque méthode. Les paires (`ls-pair`, `ls-full`)
+    tiennent jusqu'à $10^(-4)$ puis décrochent ; à $10^(-2)$, toutes restent au portefeuille vide.],
+)
+
+*Sur a400_t15_orig* (36 165 variables QUBO, 6 000 entières), `ls-full-b20` donne les *premières solutions
+connues* pour les 8 valeurs de $lambda$, en 4 à 8 s chacune, toutes validées par l'arbitre et enregistrées
+dans `results/portfolio/` (par ex. $-3 thin 406 thin 114$ pour $lambda = 10^(-4)$).
+
+=== Ce qu'on en retient
+
++ *Les paires sont la clé.* Elles font passer de 16 à 63 cas égaux au meilleur connu, et c'est sur les grands
+  $lambda$ qu'elles font la différence, comme prévu.
++ *Les blocs seuls nuisent.* `ls-block` fait moins bien que `ls-single` presque partout : en descente
+  gloutonne, un long bloc très rentable pris tôt fige une structure qui empêche ensuite de meilleures
+  combinaisons. Combinés aux paires et aux échanges, ils ne gênent plus.
++ *La taille des lots est un vrai réglage.* Sur a010 et a050, `batch = 1` donne les meilleurs optima. Sur a400,
+  `batch = 20` est à la fois 10 fois plus rapide (5 s contre 70 s) et meilleur.
++ *Deux faiblesses à traiter ensuite :*
+  - à $lambda = 10^(-2)$ sur a050, *aucun* mouvement n'améliore le portefeuille vide : il faut pouvoir
+    accepter des mouvements qui dégradent temporairement (P5), ou démarrer ailleurs ;
+  - à $lambda >= 5 dot 10^(-4)$, l'optimum local est encore loin (3 à 10 %) : c'est là que les
+    métaheuristiques (P5) et le LNS (P7) ont le plus à gagner.
+
+#figure(
+  image("figures/p4_dev_gap_by_case.png", width: 100%),
+  caption: [Jeu `dev` : gap de chaque méthode, cas par cas. Le cas a200 ($dagger$) se rapporte au meilleur score
+    trouvé.],
+)
 
 == P5. Métaheuristiques en entiers
 
