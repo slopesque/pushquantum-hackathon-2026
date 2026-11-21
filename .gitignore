@@ -3,6 +3,7 @@
 
 # Created when you run the notebooks
 qoblib_data/
+data/
 *.sol
 __pycache__/
 .ipynb_checkpoints/
