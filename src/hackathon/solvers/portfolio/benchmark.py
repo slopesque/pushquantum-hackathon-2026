@@ -233,6 +233,8 @@ def run_benchmark(
 
     ``on_run(run, problem, v)`` est appelé après chaque exécution (affichage, sauvegarde des ``.sol``).
     """
+    import hackathon.solvers.portfolio.methods  # noqa: F401  (enregistre les méthodes)
+
     methods, seeds = list(methods), list(seeds)
     unknown = [m for m in methods if m not in METHODS]
     if unknown:
