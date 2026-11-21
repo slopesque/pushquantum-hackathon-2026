@@ -57,7 +57,7 @@ Le jury juge deux choses : *l'échelle* (taille de l'instance, qubits du plus gr
   content: (
     [P1. Encodage entier $v in {-3..3}$], [Réduire le problème], [#fait],
     [P2. Évaluateur incrémental], [Passer à l'échelle], [#fait],
-    [P3. Harnais de test], [Mesurer], [#afaire],
+    [P3. Harnais de test], [Mesurer], [#fait],
     [P4. Recherche locale rapide + mouvements par paires], [Baseline classique], [#afaire],
     [P5. Métaheuristiques (SA, tabou) en entiers], [Baseline forte], [#afaire],
     [P6. Solveur exact (SCIP) sur petites instances], [Bornes, contrôle], [#afaire],
@@ -140,15 +140,123 @@ recalculé doit être *exactement* celui de l'arbitre.
 
 == P3. Harnais de test
 
-- *Jeu de dev (minutes) :* `a010_t10_orig` avec les 8 $lambda$, `a050_t10_orig` avec $lambda in
-  {10^(-4), 10^(-3), 10^(-2)}$, `a200_t10_orig` avec $lambda = 10^(-4)$.
-- *Grille complète :* 32 instances (a010 à a400) $times$ 8 $lambda$, soit 256 cas, dont 128 avec un meilleur
-  connu.
-- *Pour chaque solution :* écrire le `.sol`, le relire, le noter avec l'arbitre, calculer le gap, enregistrer
-  avec `save_run`.
-- *Protocole :* même budget de temps par méthode, plusieurs seeds, on rapporte le meilleur et la médiane.
-- *Repères sans meilleur connu (a200, a400) :* le portefeuille vide ($-100 T$) et la recherche locale
-  gloutonne.
+Le but : répondre avec des chiffres à « cette méthode est-elle meilleure que la précédente ? », et produire
+les fichiers à rendre.
+
+=== Les cas
+
+Un *cas* est une instance et un poids de risque $lambda$ ; le budget $B$ en découle ($B = 4, 20, 50, 100$
+pour $n = 10, 50, 200, 400$). La grille officielle compte 32 instances (8 tailles $times$ 4 seeds de
+données : `orig`, `s00` à `s02`) $times$ 8 valeurs de $lambda$, soit *256 cas*.
+
+#single_column_table(
+  headers: ("Jeu", "Contenu", "Cas", "Usage"),
+  content: (
+    [`dev`], [a010_t10_orig (8 λ), a050_t10_orig (λ = 1e-4, 1e-3, 1e-2), a200_t10_orig (λ = 1e-4)], [12],
+    [Itérer vite],
+    [`a010`, `a050`], [Toutes les instances de cette taille], [64], [Qualité],
+    [`known`], [a010 et a050 : tous les cas avec un meilleur connu], [128], [Gap publié],
+    [`large`], [a200 et a400 : aucun meilleur connu], [128], [Échelle],
+    [`a400`], [a400_t15_orig, 8 λ (36 165 variables QUBO)], [8], [Le plus gros],
+    [`full`], [Toute la grille], [256], [Résultats finaux],
+  ),
+  false,
+  [Les jeux de cas prédéfinis (`SETS` dans `benchmark.py`).],
+)
+
+=== Le protocole
+
+#definition(title: "Cas, méthode, exécution")[
+  Un *cas* $c = (I, lambda)$ est une instance $I$ (donc $n$ actions, $T$ jours) et un poids de risque
+  $lambda$ ; il fixe le budget $B(n)$ et l'objectif $f_c : {-3, dots, 3}^(T times n) -> ZZ$ (P1), avec
+  l'ensemble faisable $cal(F)_c$. Une *méthode* est une fonction $M(c, omega, tau) in cal(F)_c$ d'un cas,
+  d'une graine aléatoire $omega$ et d'une limite de temps $tau$. Une *exécution* $(c, M, omega)$ produit la
+  solution $v = M(c, omega, tau)$, son score $f_c (v)$ et son temps de calcul.
+]
+
+#definition(title: "Agrégats par cas et par méthode")[
+  Pour un ensemble de graines $Omega$ :
+  $ f^*_c (M) = min_(omega in Omega) f_c (M(c, omega, tau)), quad
+    tilde(f)_c (M) = op("médiane")_(omega in Omega) f_c (M(c, omega, tau)), $
+  calculés sur les seules exécutions faisables.
+]
+
+#definition(title: "Gap et référence")[
+  Le gap d'un score $f$ par rapport à une référence $r$ est
+  $ g(f, r) = (f - r) / (|r|) . $
+  La référence est le meilleur connu publié par QOBLIB, $r_c = "BKV"_c$, quand il existe (a010, a050).
+  Sinon (a200, a400), on prend dans les graphes le meilleur score des méthodes comparées,
+  $r_c = min_M f^*_c (M)$ : le gap mesure alors l'écart entre méthodes, pas à un optimum. $g = 0$ égale la
+  référence, $g < 0$ la bat.
+]
+
+- Chaque méthode reçoit la même *limite de temps* par exécution et tourne avec plusieurs *seeds* (0, 1, …).
+- Chaque solution est notée par *notre modèle* (`problem.objective`) ; on vérifie qu'elle est faisable.
+- Par cas et par méthode, on rapporte le *meilleur* score et la *médiane* sur les seeds, le gap de chacun et
+  le temps moyen.
+- *Gap* : $("score" - "meilleur connu") \/ |"meilleur connu"|$. Les meilleurs connus sont lus dans la table
+  publiée par QOBLIB (128 cas, a010 et a050) et gardés en cache.
+- *Sans meilleur connu (a200, a400)*, les graphes prennent comme référence le meilleur score trouvé par les
+  méthodes comparées (cas marqués $dagger$). Le portefeuille vide ($-100 T$) sert de repère plancher.
+- *L'arbitre officiel n'intervient qu'à la fin*, avec `--save-sol` : la meilleure solution de chaque cas est
+  écrite en `.sol`, relue et notée par l'arbitre, puis enregistrée dans `results/portfolio/` (`save_run`).
+  Si l'arbitre ne confirme pas notre score, le script s'arrête.
+
+=== Les outils
+
+#single_column_table(
+  headers: ("Fichier", "Rôle"),
+  content: (
+    [`solvers/portfolio/benchmark.py`], [Grille et jeux de cas, meilleurs connus, registre des méthodes
+      (`@register("nom")`), exécution, agrégation, CSV],
+    [`solvers/portfolio/plots.py`], [Les graphes (PNG)],
+    [`scripts/bench_portfolio.py`], [Lance un benchmark et écrit tous les résultats],
+    [`scripts/plot_portfolio_bench.py`], [Retrace un run, ou superpose plusieurs runs pour les comparer],
+  ),
+  false,
+  [Les fichiers du banc d'essai.],
+)
+
+Une méthode est une fonction `(problème, rng, limite de temps) → v` enregistrée avec `@register("nom")`.
+Elle devient aussitôt utilisable par le script. Commandes types :
+
+```bash
+uv run scripts/bench_portfolio.py --set dev --methods empty ls --seeds 3 --time 10 --label essai
+uv run scripts/bench_portfolio.py --set a400 --methods ls --save-sol      # validation + sauvegarde
+uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/portfolio/bench/<run2> \
+    --out results/portfolio/bench/compare --label "run1 vs run2"
+```
+
+Chaque run écrit dans `results/portfolio/bench/<date>_<label>/` : `runs.csv` (une ligne par exécution),
+`summary.md` (tableau par cas et par méthode), `meta.json` (arguments, commit git, durée) et les graphes.
+
+=== Les graphes
+
+- `gap_by_case.png` : un cas par ligne, un point par méthode (meilleure seed). Le trait vertical marque le
+  meilleur connu ; à gauche, le record est battu.
+- `gap_vs_lambda.png` : un panneau par instance, le gap en fonction de $lambda$, une courbe par méthode.
+  C'est là qu'on voit si une méthode tient quand le risque domine.
+- `time_by_case.png` : le temps moyen par exécution, en échelle log.
+
+Au-delà de 48 cas, chaque graphe est découpé par taille d'instance (`gap_by_case_a050_t10.png`, …). Les
+méthodes reçoivent les couleurs d'une palette catégorielle validée pour le daltonisme, dans un ordre fixe,
+et une forme de marqueur propre, pour que l'identité ne repose pas que sur la couleur. Les PNG ne sont pas
+commités (on les régénère depuis `runs.csv`) ; ceux qu'on veut garder sont copiés dans
+`formalisations/portfolio/figures/`.
+
+=== Premier repère : le portefeuille vide
+
+Lancé sur les 256 cas (`results/portfolio/bench/20261121T162856Z_baseline-empty/`, 2 minutes, surtout du
+chargement de données). Ne rien détenir vaut $-100 T$, soit 97 % à 100 % de gap dans presque tous les cas.
+Les exceptions sont les grands $lambda$, où le risque rend presque toutes les positions perdantes : avec
+$lambda = 10^(-2)$, le portefeuille vide *est* le meilleur connu sur les 8 instances a010 (gap nul), mais il
+en reste loin sur a050_t10 (gaps de 55 % à 98 %).
+
+#figure(
+  image("figures/baseline_empty_gap_vs_lambda_a010_t10.png", width: 100%),
+  caption: [Portefeuille vide sur a010_t10 : gap en fonction de $lambda$. C'est le plancher que P4 doit
+    faire descendre vers 0.],
+)
 
 == P4. Recherche locale rapide et mouvements par paires
 
