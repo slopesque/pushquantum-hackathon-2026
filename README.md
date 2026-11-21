@@ -37,7 +37,7 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
 
 | Option | Rôle | Défaut |
 |---|---|---|
-| `--set` | Jeu de cas : `dev` (12), `a010`, `a050`, `known` (128, avec meilleur connu), `large` (128, a200 + a400), `a400` (8), `full` (256) | `dev` |
+| `--set` | Jeu de cas : `dev` (12), `a010`, `a050`, `known` (128, avec meilleur connu), `large` (128, a200 + a400), `a400` (8), `hard` (9, grands λ), `full` (256) | `dev` |
 | `--methods` | Une ou plusieurs méthodes enregistrées (voir ci-dessous) | `empty` |
 | `--seeds` | Nombre de seeds par cas (0, 1, …) | 3 |
 | `--time` | Limite de temps par exécution, en secondes | 10 |
@@ -88,6 +88,14 @@ graphes se rapportent au meilleur score trouvé par les méthodes comparées (ca
 | `ls-pair` | + paires couvertes (actions corrélées ou anti-corrélées) sur des blocs de jours |
 | `ls-full` | + échanges d'une unité entre deux actions (budget saturé) : la meilleure à ce jour sur a010/a050 |
 | `ls-full-b20` | `ls-full` en appliquant 20 mouvements par passe : bien plus rapide, meilleure sur a400 |
+| `lns-sa` | `ls-full` puis **LNS** : on réoptimise tout le portefeuille sur 1 ou 2 jours (QUBO de ≤ 200 bits) par recuit simulé. La meilleure sur les grands λ |
+| `lns-pce` | Même LNS, mêmes fenêtres, QUBO résolu par **PCE** (Divi, ~20 qubits) |
+| `lns-sa-small` / `lns-qaoa` | LNS à petites fenêtres (8 actions × 1 jour, 16 bits) : recuit simulé / **QAOA** (16 qubits) |
+| `lns-enum` | LNS, fenêtres 10 × 1 (20 bits), QUBO résolu exactement par énumération |
+
+Les méthodes `lns-*` utilisent toute la limite de temps (`--time`). QAOA et PCE tournent sur le simulateur
+local. À fenêtres égales, ils ne battent pas encore le recuit simulé : voir
+`formalisations/portfolio/lns.typ`.
 
 **Ajouter une méthode** : une fonction `(problème, rng, limite de temps) → solution` enregistrée par un
 décorateur dans `methods.py`. Elle devient aussitôt utilisable avec `--methods`.
