@@ -1,0 +1,14 @@
+# Réglage H1 sur network12, seed 0, --no-write (commun : --lr 0.003 --l2 1e-2 sauf mention ; B1 seed 0 = 298 858)
+CFG --beta 0.25 => h1_sa_fm network12 seed=0 score=283400 best_known=276474 gap=+2.51% lp=5000 t=220.92s rounds=47 q_rounds=0 explore=0 E1=0.982 rho=0.276 rho_kit=0.313
+CFG --beta 0.5 --lam 2 => h1_sa_fm network12 seed=0 score=304400 best_known=276474 gap=+10.10% lp=5000 t=202.49s rounds=40 q_rounds=0 explore=0 E1=1.000 rho=0.342 rho_kit=0.313
+CFG --beta 0.5 --epochs-round 100 => h1_sa_fm network12 seed=0 score=288072 best_known=276474 gap=+4.20% lp=5000 t=219.6s rounds=41 q_rounds=0 explore=0 E1=0.967 rho=0.331 rho_kit=0.313
+CFG --beta 0.5 --n0-frac 0.1 => h1_sa_fm network12 seed=0 score=292167 best_known=276474 gap=+5.68% lp=5000 t=220.97s rounds=48 q_rounds=0 explore=0 E1=0.966 rho=0.321 rho_kit=0.313
+CFG --beta 0.5 --rank 4 => h1_sa_fm network12 seed=0 score=295264 best_known=276474 gap=+6.80% lp=5000 t=214.62s rounds=44 q_rounds=0 explore=0 E1=0.978 rho=0.302 rho_kit=0.313
+CFG --rank 8 => h1_sa_fm network12 seed=0 score=294667 best_known=276474 gap=+6.58% lp=5000 t=204.84s rounds=41 q_rounds=0 explore=0 E1=0.996 rho=0.280 rho_kit=0.313
+CFG --rank 4 => h1_sa_fm network12 seed=0 score=295600 best_known=276474 gap=+6.92% lp=5000 t=200.95s rounds=41 q_rounds=0 explore=0 E1=0.998 rho=0.264 rho_kit=0.313
+CFG --rank 8 --target zscore => h1_sa_fm network12 seed=0 score=298143 best_known=276474 gap=+7.84% lp=5000 t=183.82s rounds=40 q_rounds=0 explore=0 E1=0.000 rho=— rho_kit=0.313
+CFG --rank 8 --beta 1 => h1_sa_fm network12 seed=0 score=287067 best_known=276474 gap=+3.83% lp=5000 t=212.75s rounds=46 q_rounds=0 explore=0 E1=0.907 rho=0.342 rho_kit=0.313
+CFG --rank 8 --beta 0.5 => h1_sa_fm network12 seed=0 score=285625 best_known=276474 gap=+3.31% lp=5000 t=209.19s rounds=42 q_rounds=0 explore=0 E1=0.966 rho=0.347 rho_kit=0.313
+CFG --rank 8 --beta 2 => h1_sa_fm network12 seed=0 score=287308 best_known=276474 gap=+3.92% lp=5000 t=528.85s rounds=189 q_rounds=0 explore=4 E1=0.386 rho=0.351 rho_kit=0.313
+CFG --rank 8 --beta 1 --sa-reads 50 => h1_sa_fm network12 seed=0 score=287308 best_known=276474 gap=+3.92% lp=5000 t=236.41s rounds=106 q_rounds=0 explore=0 E1=0.913 rho=0.345 rho_kit=0.313
+CFG PCE beta0.5 every:5 pop20 it5 => h1_pce_fm network12 seed=0 score=287334 best_known=276474 gap=+3.93% lp=5000 t=234.03s rounds=45 q_rounds=9 explore=0 E1=0.764 rho=0.315 rho_kit=0.313
