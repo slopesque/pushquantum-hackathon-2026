@@ -1,127 +1,92 @@
-# Workflow commun des agents « network »
+# Workflow des agents « network » (profil hackathon)
 
-> Process commun à **tous** les agents qui expérimentent une hypothèse de [`hypothesis.md`](hypothesis.md).
-> Le *quoi* (idée, protocole, critères de succès) est dans `hypothesis.md`. Le *comment mesurer* est dans
-> [`metrics.md`](metrics.md). Ce document décrit le *où* et le *comment travailler*.
+> Process commun à tout agent qui travaille sur une hypothèse de [`hypothesis.md`](hypothesis.md). Le
+> *quoi* est dans `hypothesis.md`, le *comment mesurer* dans [`metrics.md`](metrics.md). Ici : le *où*
+> et le *comment*. Pour l'instant, seules **H0** (baseline) puis **H1** sont au programme.
 
-## 1. Identifiant de l'hypothèse
+## 1. Identifiant et emplacements
 
-L'**id** d'une hypothèse est son nom en minuscules : `h0`, `h1`, …, `h9`. Il sert partout :
+L'**id** d'une hypothèse est son nom en minuscules (`h0`, `h1`…).
 
-| Élément | Convention | Exemple (H7) |
-|---|---|---|
-| Branche | `network/<id>-<slug>`, avec le slug donné dans `hypothesis.md` | `network/h7-qls-2exchange` |
-| Worktree | `../pushquantum-hackathon-2026-<id>` | `../pushquantum-hackathon-2026-h7` |
-| Code | `src/network-experiments/<id>/` | `src/network-experiments/h7/` |
-| Notebooks | `notebooks/network/<id>/` | `notebooks/network/h7/` |
-| Documentation | `docs/network/hypothesis/<id>/process.md` et `result.md` | `docs/network/hypothesis/h7/` |
-| Runs de benchmark | `results/network/bench/<id>/<méthode>.jsonl` | `results/network/bench/h7/qls_a.jsonl` |
-| Solutions rendables | `results/network/<timestamp>_networkNN.sol` et `.json` (via `save_run`) | — |
+| Élément | Convention | H0 | H1 |
+|---|---|---|---|
+| Branche | `network/<id>-<slug>` | `network/h0-baseline` | `network/h1-learned-surrogate` |
+| Worktree | `../pushquantum-hackathon-2026-<id>` | `…-h0` | `…-h1` |
+| Code | `src/network-experiments/<id>/` | `h0/` | `h1/` |
+| Notebooks | `notebooks/network/<id>/` | | |
+| Documentation | `docs/network/hypothesis/<id>/process.md` et `result.md` | | |
+| Runs | `results/network/bench/<id>/<méthode>.jsonl` | | |
+| Solutions rendables | `results/network/<timestamp>_networkNN.sol` et `.json`, via `save_run` | | |
 
-Le socle H0 utilise la branche `network/h0-baseline`.
+## 2. Mise en place (worktree)
 
-## 2. Mise en place : un worktree Git par hypothèse
-
-Chaque agent travaille dans **son propre worktree**. Les agents peuvent ainsi tourner en parallèle sans
-se gêner.
-
-**Branche de base :**
-- pour `h0`, la branche qui porte la documentation network (`network/hypothesis`, ou `main` une fois
-  qu'elle y est fusionnée) ;
-- pour `h1` à `h9`, la branche de H0 (`network/h0-baseline`) dès qu'elle existe, pour disposer des
-  baselines et de l'instrumentation des métriques.
+Branches de base :
+- pour `h0`, la branche qui porte cette documentation ;
+- pour `h1`, `network/h0-baseline`.
 
 ```bash
-# depuis le dépôt principal
 git worktree add ../pushquantum-hackathon-2026-<id> -b network/<id>-<slug> <branche-de-base>
 cd ../pushquantum-hackathon-2026-<id>
-uv sync                                    # .venv propre au worktree (paquet hackathon en éditable)
-cp ../pushquantum-hackathon-2026/.env .    # facultatif : seulement pour la characterization ou le cloud (phase 2)
-ln -s ../../pushquantum-hackathon-2026/references/qoblib_data references/qoblib_data  # cache QOBLIB partagé (facultatif)
+uv sync
+ln -s ../../pushquantum-hackathon-2026/references/qoblib_data references/qoblib_data  # cache QOBLIB (facultatif)
+cp ../pushquantum-hackathon-2026/.env .                                               # seulement si cloud
 ```
 
-Les fichiers ignorés par git (`.env`, `.venv/`, `references/qoblib_data/`) **ne sont pas copiés** dans un
-worktree. Sans le lien symbolique, l'arbitre retélécharge les données au premier usage.
+## 3. Code
 
-## 3. Organisation du code
-
-`src/network-experiments/` n'est **pas** un paquet installé. Son nom contient un tiret, donc il n'est pas
-importable directement. Chaque `<id>/` est en revanche un paquet Python (avec un `__init__.py`), qu'on
-importe en ajoutant `src/network-experiments` au `PYTHONPATH`.
-
-```
-src/network-experiments/
-├── h0/                 # socle commun : scorer avec cache et duales, mouvements, baselines B0–B3, métriques
-│   ├── __init__.py
-│   └── …
-└── <id>/
-    ├── __init__.py
-    ├── …               # composants et utilitaires de l'hypothèse
-    ├── run_*.py        # points d'entrée reproductibles (CLI, avec --instance, --seed, --method)
-    └── tests/          # tests pytest de l'hypothèse
-```
+`src/network-experiments/` n'est pas un paquet installé : son nom contient un tiret, donc il n'est pas
+importable directement. Chaque `<id>/` est un paquet (avec un `__init__.py`), qu'on importe en ajoutant
+`src/network-experiments` au `PYTHONPATH`.
 
 ```bash
 export PYTHONPATH=src/network-experiments
-uv run python -m <id>.run_bench --instance network12 --seed 0 --method <m>
+uv run python -m <id>.run --instance network12 --seed 0 --method <m>
 uv run pytest src/network-experiments/<id>/tests
 uv run ruff check src/network-experiments/<id> && uv run ruff format src/network-experiments/<id>
 ```
 
 **Règles :**
-- On importe l'arbitre avec `from hackathon.referee import qt` et les utilitaires avec
-  `from hackathon.utils import gap, make_backend, save_run`. Le socle H0 s'importe avec `from h0… import …`.
-- **On ne modifie pas le code d'une autre hypothèse.** Si on a besoin de changer H0 (bug, ajout d'un
-  utilitaire commun), on le décrit dans `result.md` (§ « Demandes de changement sur H0 ») au lieu de
-  modifier `h0/` dans sa branche.
-- Les notebooks (`notebooks/network/<id>/`, marimo de préférence) ne servent qu'à explorer et
-  visualiser : la logique réutilisable va dans `src/network-experiments/<id>/`. Dans un notebook, ajouter
-  `src/network-experiments` à `sys.path`.
+- On importe l'arbitre avec `from hackathon.referee import qt`, et `gap` et `save_run` depuis
+  `hackathon.utils`.
+- H1 réutilise H0 (`from h0… import …`) sans le modifier. Si H0 a besoin d'un changement, on le note dans
+  `result.md`.
+- Les notebooks servent à explorer. La logique réutilisable va dans `src/network-experiments/<id>/`.
 
-## 4. Phases d'expérimentation
+## 4. Ordre de travail et exécution
 
-| Phase | Où | Limites | Statut |
-|---|---|---|---|
-| **1 · Local** | `MaestroSimulator`, `make_backend(use_cloud=False)` | Circuits **rapides à simuler** : par défaut **≤ 20 qubits par circuit**, et jamais un circuit qui prend plus de quelques secondes. Pas de cloud, pas de crédits | **Phase en cours** |
-| **2 · Cloud** | `QoroService` (`make_backend(use_cloud=True)`) | Gros circuits, plus de 20 qubits | Plus tard, sur décision humaine |
+On suit l'ordre de `hypothesis.md` :
 
-**En phase 1 :**
-- On peut quand même attaquer les **grosses instances** (`network16` à `network24`) si la méthode ne
-  lance que de **petits circuits** (sous-problèmes partitionnés, QLS, propositions locales). Seule la
-  taille des circuits est limitée, pas celle de l'instance.
-- Les parties purement classiques (LP, SA, PT, apprentissage) n'ont pas de limite, en dehors des budgets
-  de `metrics.md` §2.
-- Si un critère de succès de `hypothesis.md` demande plus de 20 qubits (par exemple « S3 ≥ 30 » pour H6,
-  ou `network06` en H4), il est marqué **« reporté à la phase 2 »** dans `result.md`, avec la commande
-  exacte qui permettra de le lancer sur le cloud.
-- La characterization (cloud, coûteuse) n'est pas lancée en phase 1. On la prépare (code et états de
-  référence) pour la phase 2.
+| Étape | Instance | Seeds |
+|---|---|---|
+| 1 · Vérification | `network05` | 0 |
+| 2 · Réglage | `network12` | 0 |
+| 3 · Évaluation | `network12` | 0, 1, 2 |
+| 4 · Consolidation | `network24` (sinon `network20`, puis `network16` : `metrics.md` §5) | 0, 1, 2 |
 
-**En phase 2 :** les résultats cloud **s'ajoutent** au même `result.md` (section « Phase 2 »), avec
-`backend = "qoro_cloud"` et les crédits consommés (C4).
+**`network24` n'est lancé qu'à la consolidation.**
 
-## 5. Livrables d'une session
+- **Local d'abord.** Maestro (`make_backend(use_cloud=False)`), et **aucun circuit de plus de 24 qubits en local**.
+  Les parties classiques (LP, SA, apprentissage) n'ont pas d'autre limite que le budget (`metrics.md` §2).
+- **Cloud seulement en consolidation**, et seulement si un circuit dépasse ce que le local permet (par
+  exemple PCE à environ 33 qubits sur `network24`). Noter les crédits consommés.
+- **Accélérer en local avec les 8 cœurs.** Lancer les 3 seeds dans 3 processus en parallèle. Le GPU local
+  n'aide pas : le Maestro installé n'a pas de support GPU.
+
+## 5. Livrables
 
 | Quand | Livrable | Modèle |
 |---|---|---|
-| **Au début**, avant de coder | `docs/network/hypothesis/<id>/process.md` : objectif, procédé d'implémentation, plan d'évaluation | [`hypothesis/_template/process.md`](hypothesis/_template/process.md) |
-| Pendant | Code (`src/network-experiments/<id>/`), runs JSONL (`results/network/bench/<id>/`), `.sol` via `save_run` | `metrics.md` §6 |
-| **À la fin** | `docs/network/hypothesis/<id>/result.md` : résultats, conclusion, suite | [`hypothesis/_template/result.md`](hypothesis/_template/result.md) |
-| À la fin | Ligne `Statut` de l'hypothèse mise à jour dans `hypothesis.md`, avec un lien vers `result.md` | — |
+| Au début | `docs/network/hypothesis/<id>/process.md` : objectif, implémentation, plan d'évaluation | [`hypothesis/_template/process.md`](hypothesis/_template/process.md) |
+| Pendant | Code, runs JSONL, `.sol` via `save_run` | `metrics.md` §4 |
+| À la fin | `docs/network/hypothesis/<id>/result.md`, et la ligne `Statut` dans `hypothesis.md` | [`hypothesis/_template/result.md`](hypothesis/_template/result.md) |
 
-`process.md` est **mis à jour** si le procédé change en cours de route : on ajoute une section « Écarts
-au plan », on ne réécrit pas l'historique.
+## 6. Checklist de fin
 
-## 6. Checklist de fin de session
-
-- [ ] Les tests de l'hypothèse passent : `uv run pytest src/network-experiments/<id>/tests`.
-- [ ] `ruff check` et `ruff format` sont propres sur `src/network-experiments/<id>`.
-- [ ] Chaque run de `result.md` correspond à une ligne JSONL de `results/network/bench/<id>/`, conforme
-      à `metrics.md` §6, sur 5 seeds et avec les budgets standard (ou un écart explicitement signalé).
-- [ ] Une ablation classique est présente pour chaque affirmation de gain quantique (A1 à A3).
-- [ ] Tout `.sol` mentionné est validé par `qt.check_network_solution` et enregistré par `save_run`.
-- [ ] `result.md` donne une conclusion selon `metrics.md` §5 et liste les points reportés à la phase 2.
-- [ ] La ligne `Statut` de l'hypothèse est à jour dans `hypothesis.md`. Ne pas toucher au tableau d'état
-      d'`AGENTS.md` §5 : il est mis à jour à la fusion, ce qui évite les conflits entre branches.
-- [ ] Le travail est commité sur la branche de l'hypothèse (Conventional Commits, sans signature : voir
-      `AGENTS.md` §4). Pas de PDF, pas de `.env`, pas de clé.
+- [ ] Les tests passent et `ruff` est propre sur `src/network-experiments/<id>`.
+- [ ] Chaque chiffre de `result.md` vient d'une ligne JSONL : même budget, seeds 0, 1 et 2.
+- [ ] Chaque affirmation de gain quantique a son ablation (même méthode avec du SA à la place).
+- [ ] Le `.sol` rendu est validé par `qt.check_network_solution` et enregistré par `save_run`.
+- [ ] La ligne `Statut` est à jour dans `hypothesis.md`. Ne pas toucher au tableau d'état d'`AGENTS.md`,
+      qui est mis à jour à la fusion.
+- [ ] Le travail est commité sur la branche (Conventional Commits, sans signature). Pas de `.env`, pas de
+      PDF.

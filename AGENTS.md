@@ -84,9 +84,9 @@ pushquantum-hackathon-2026/
 │   ├── qoblib_tools.py              # L'ARBITRE : chargeurs, scoreurs officiels, QUBO builders, écriture .sol
 │   └── README.md                    # Règles du hackathon (scoring, formats .sol)
 ├── docs/                    # Documentation de travail (humains + agents)
-│   └── network/                     # state-of-the-art.md, hypothesis.md (H0…H9), metrics.md, workflow.md
+│   └── network/                     # state-of-the-art.md, hypothesis.md (H0, H1 + backlog), metrics.md, workflow.md
 │       └── hypothesis/<id>/             # process.md + result.md par hypothèse (modèles dans _template/)
-├── src/network-experiments/ # Expériences network, un paquet par hypothèse (h0/ … h9/), hors paquet installé :
+├── src/network-experiments/ # Expériences network, un paquet par hypothèse (h0/, h1/…), hors paquet installé :
 │                            #   PYTHONPATH=src/network-experiments (voir docs/network/workflow.md)
 ├── src/hackathon/           # Notre code réutilisable, installé en mode éditable par `uv sync`
 │   ├── referee.py                   # `from hackathon.referee import qt` : importe l'arbitre sans le copier
@@ -117,7 +117,7 @@ pushquantum-hackathon-2026/
   `save_run(...)`.
 - **Les données QOBLIB** sont téléchargées par l'arbitre à la première utilisation, dans
   `references/qoblib_data/` (ignoré par git).
-- **Expériences network (hypothèses H0 à H9) :** conventions spécifiques, décrites dans
+- **Expériences network (H0, H1, puis backlog) :** conventions spécifiques, décrites dans
   `docs/network/workflow.md` (code dans `src/network-experiments/<id>/`, notebooks dans
   `notebooks/network/<id>/`, runs dans `results/network/bench/<id>/`).
 
@@ -188,76 +188,64 @@ Ne pas commiter les PDF ni leurs conversions (les garder dans `/tmp`).
 
 ## 5. Network (problème 08)
 
-> Section à mettre à jour au fur et à mesure que les hypothèses de `docs/network/hypothesis.md` sont
-> expérimentées (statut, résultats, conclusions).
+> Section à mettre à jour à la fusion des branches, au fil des résultats. Profil **hackathon** : peu
+> d'hypothèses, peu de seeds, des budgets courts.
 
 ### Mission
 
-Trouver, pour la **plus grosse instance possible** (`network24`, 552 variables, meilleur connu
-**663 688**), une topologie 2-in/2-out dont le score LP (`qt.route_min_congestion`) est **au plus près du
-meilleur connu, ou meilleur**, avec une **contribution quantique démontrée** (ablation contre un
-équivalent classique) et un **programme quantique aussi gros que possible** (qubits). Chaque résultat
-rendable est un `network<NN>.sol` validé par `qt.check_network_solution` et enregistré par `save_run`.
+Rendre un `network<NN>.sol` valide (`qt.check_network_solution`, `save_run`) sur la **plus grosse instance
+possible** (cible `network24` : 552 variables, meilleur connu **663 688**), **au plus près du meilleur
+connu**. Si un programme quantique est utilisé, il faut le plus de qubits possible et une ablation classique
+qui montre son apport.
 
-### Ce qu'il faut savoir avant de commencer
+### Ce qu'il faut savoir
 
-- Le problème se sépare en **topologie** (combinatoire : QUBO, n(n−1) variables) et **routage** (LP exact,
-  quelques ms, c'est l'arbitre). Le QUBO du kit (`qt.build_network_qubo`) n'est qu'un **substitut**
-  (`−Σ t_ij x_ij`) : l'améliorer est une grande partie du défi.
-- Une topologie valide = deux permutations sans point fixe qui ne coïncident jamais ; l'échange
-  `(a→b),(c→d) ⇒ (a→d),(c→b)` préserve les degrés.
-- **Barre à battre** : les meilleurs connus de `network11` à `network23` viennent d'un *parallel tempering*
-  classique sur ces 2-/3-exchanges avec le LP comme énergie (soumission QOBLIB de Gupta, détaillée dans
-  `docs/network/state-of-the-art.md` §0). Optima prouvés jusqu'à `network10`.
-- Divi 0.16.2 fournit déjà : `LinearConstraint`, `PartitioningProgramEnsemble`, `PCE` (`PolyEncoding`,
-  `DenseEncoding`), HUBO dans `BinaryOptimizationProblem`, `xy_mixer`, `WState`, `InitialState`
-  dérivable, `QAOA.mixer_hamiltonian` réassignable.
+- **Topologie et routage sont deux problèmes séparés.**
+  - Le choix de la topologie est combinatoire : un QUBO à n(n−1) variables.
+  - Le routage est un LP exact, résolu en quelques ms (12 ms sur network12, 65 ms sur network24) : c'est
+    l'arbitre.
+  - Le QUBO du kit (`qt.build_network_qubo`) n'est qu'un **substitut** (`−Σ t_ij x_ij`).
+- **Repère B1** (SA sur ce substitut, puis repair, puis LP, mesuré sur 100 lectures) :
+  - network05 : optimum ;
+  - network12 : +12,0 % de gap ;
+  - network24 : +15,8 % de gap.
+
+  En quelques secondes. Toute méthode doit faire mieux.
+- Les meilleurs connus de network11 à network23 viennent d'un **parallel tempering** classique (voir
+  `docs/network/state-of-the-art.md` §0). On ne le relance pas : le gap au meilleur connu sert de mesure.
 
 ### Documents de travail
 
-- `docs/network/state-of-the-art.md` : revue de littérature (DOI, auteurs, résultats) — **ne pas refaire
-  la recherche**, la compléter si besoin.
-- `docs/network/hypothesis.md` : hypothèses **H0 à H9**, indépendantes, avec protocole commun
-  (instances, seeds 0–4, baselines B0–B3), métriques principales, critères de succès chiffrés et papiers
-  de référence.
-- `docs/network/metrics.md` : **référentiel obligatoire des métriques** (Q qualité, C coût, S échelle,
-  E échantillonnage, F substitut, A attribution) avec définition exacte, calcul, unité et clé JSON ;
-  budgets standard par instance (comparaison à budget LP égal) ; schéma JSON d'un run ; agrégation sur
-  5 seeds ; règles de décision (validée / invalidée / non concluante).
-- `docs/network/workflow.md` : **process commun des agents** (id `h0`…`h9`, worktree Git, arborescence du
-  code, phases local puis cloud, livrables `process.md` et `result.md`, checklist de fin de session).
-- `docs/network/hypothesis/<id>/` : `process.md` (objectif et procédé, écrit au début) et `result.md`
-  (rapport, écrit à la fin) de chaque hypothèse ; modèles dans `docs/network/hypothesis/_template/`.
+- `docs/network/hypothesis.md` contient :
+  - le profil hackathon et l'ordre de travail ;
+  - **H0** (baseline minimale) et **H1** (substitut QUBO appris) ;
+  - le backlog des autres pistes, dont le détail est au commit `29d82b9`.
+- `docs/network/metrics.md` : les métriques (définition, clé JSON), les budgets par instance, le schéma
+  JSON et la règle de gain sur 3 seeds.
+- `docs/network/workflow.md` : l'id `h0`/`h1`, le worktree, `src/network-experiments/<id>/`, l'exécution
+  locale puis cloud, les livrables et la checklist.
+- `docs/network/state-of-the-art.md` : la revue de littérature. **Ne pas refaire la recherche.**
+- `docs/network/hypothesis/<id>/` : `process.md` (au début) et `result.md` (à la fin). Les modèles sont
+  dans `_template/`.
 
-### Comment travailler
+### Ordre de travail
 
-Suivre **`docs/network/workflow.md`**. En résumé :
-
-1. Commencer par **H0** (socle : scorer avec cache et duales, 2-exchanges, baselines B0–B3, harnais de
-   benchmark, métriques) si ce n'est pas déjà fait : branche `network/h0-baseline`, code dans
-   `src/network-experiments/h0/`.
-2. Une hypothèse = un id (`h0`…`h9`) = un **worktree Git** et une branche `network/<id>-<slug>`.
-3. **Phase 1 en local** (Maestro, circuits ≤ 20 qubits) ; le cloud (phase 2) vient plus tard, sur
-   décision humaine ; les critères qui demandent plus de qubits sont marqués « reportés à la phase 2 ».
-4. Écrire `docs/network/hypothesis/<id>/process.md` **avant de coder**.
-5. Mesurer **exactement** les métriques de `docs/network/metrics.md` (5 seeds, budgets standard, une ligne
-   JSON par run dans `results/network/bench/<id>/<méthode>.jsonl`) ; aucun gain n'est attribué au
-   quantique sans ablation classique (A2 < 0 et p < 0,05).
-6. À la fin, écrire `docs/network/hypothesis/<id>/result.md` et mettre à jour la ligne `Statut` de
-   l'hypothèse dans `docs/network/hypothesis.md`. Le tableau ci-dessous est mis à jour à la fusion des
-   branches, pas par les agents (évite les conflits).
+1. **H0** : B0 et B1 sur `network05` et `network12`, en réutilisant le pipeline du kit et en recalculant le
+   minimum.
+2. **H1**, par étapes :
+   1. `network05` avec la seed 0, pour vérifier ;
+   2. `network12` avec la seed 0, pour régler ;
+   3. `network12` avec les seeds 0, 1 et 2, pour évaluer face à B0 et B1 ;
+   4. **consolidation** sur `network24` (sinon `network20`, puis `network16` : liste et budgets dans `metrics.md` §5) avec les seeds 0, 1 et 2. C'est le
+      seul moment où l'on lance la grosse instance.
+3. En local d'abord (Maestro) : **aucun circuit de plus de 24 qubits en local**. Le cloud seulement en consolidation, si
+   nécessaire.
+4. Selon les résultats, on choisit la prochaine hypothèse dans le backlog.
 
 ### État des hypothèses
 
 | Hypothèse | Statut | Meilleur résultat |
 |---|---|---|
-| H0 socle & baselines | À faire | — |
-| H1 substitut appris (FMQA/BOX-QUBO) | À faire | — |
-| H2 substitut enrichi + réglage λ | À faire | — |
-| H3 rétroaction duales LP | À faire | — |
-| H4 Dicke par ligne + mixer XY | À faire | — |
-| H5 encodage compact des permutations | À faire | — |
-| H6 PCE à l'échelle network24 | À faire | — |
-| H7 Quantum Local Search 2-exchange | À faire | — |
-| H8 propositions quantiques dans le PT | À faire | — |
-| H9 partitionnement structuré + warm start | À faire | — |
+| H0 baseline minimale (B0, B1) | À faire | — |
+| H1 substitut appris (FMQA / BOX-QUBO) | À faire | — |
+| Backlog H2 à H9 | Reporté | — |

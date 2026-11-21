@@ -1,62 +1,38 @@
-# <ID> · <Titre de l'hypothèse> : process
+# <ID> · <Titre> : process
 
-> Modèle à copier dans `docs/network/hypothesis/<id>/process.md` **avant de coder**. Remplacer tous les
-> `<…>`. Voir [`../../workflow.md`](../../workflow.md) pour le process commun.
+> À copier dans `docs/network/hypothesis/<id>/process.md` **avant de coder**. Process commun :
+> [`../../workflow.md`](../../workflow.md).
 
-- **Hypothèse :** <id> (section correspondante de [`hypothesis.md`](../../hypothesis.md))
-- **Branche / worktree :** `network/<id>-<slug>` / `../pushquantum-hackathon-2026-<id>`
-- **Branche de base et commit :** `<branche>` @ `<hash>`
-- **Phase :** 1 (local, ≤ 20 qubits par circuit)
-- **Date de début :** YYYY-MM-DD
+- **Hypothèse :** <id> ([`hypothesis.md`](../../hypothesis.md))
+- **Branche @ commit de base :** `network/<id>-<slug>` @ `<hash>`
+- **Date :** YYYY-MM-DD
 
 ## 1. Objectif
 
-<Reformuler l'hypothèse en une phrase testable : « À budget LP égal, <méthode> obtient une médiane de Q1
-inférieure à <baseline> sur <instances> ».>
+<Une phrase testable, par ex. « À budget LP égal, `h1_sa_fm` obtient une médiane de Q1 inférieure à B1 sur
+network12 (seeds 0, 1, 2) ».>
 
-## 2. Références utilisées
+## 2. Implémentation
 
-| Papier (Auteur et al., année, DOI) | Ce qu'on en reprend |
-|---|---|
-| <…> | <algorithme, réglages, résultat attendu> |
-
-## 3. Procédé d'implémentation
-
-<Composants à écrire, avec leur fichier dans `src/network-experiments/<id>/`, ce que chacun réutilise de
-H0 et de Divi, et les choix de conception.>
-
-| Composant | Fichier | Rôle |
+| Composant | Fichier (`src/network-experiments/<id>/…`) | Rôle |
 |---|---|---|
-| <…> | `src/network-experiments/<id>/<…>.py` | <…> |
+| <…> | <…> | <…> |
 
-## 4. Plan d'évaluation
+Choix et paramètres principaux : <…>. Papiers suivis : <…>.
 
-- **Instances (phase 1) :** <par ex. network05, network08, network12, network16>
-- **Seeds :** 0 à 4
-- **Budgets :** standard (`metrics.md` §2) <ou écart justifié>
-- **Méthodes comparées :**
+## 3. Évaluation
 
-  | Nom (`method`) | Description | Rôle |
-  |---|---|---|
-  | <…> | <…> | méthode testée |
-  | <…> | <…> | ablation classique (A1) |
-  | B0 / B1 / B2 / B3 | baselines H0 | référence |
+| Étape | Instance | Seeds | Méthodes lancées |
+|---|---|---|---|
+| Vérification | network05 | 0 | <…> |
+| Réglage | network12 | 0 | <…> |
+| Évaluation | network12 | 0, 1, 2 | <…> + baselines |
+| Consolidation | network24 (sinon network20, puis network16) | 0, 1, 2 | <…> + baselines |
 
-- **Métriques principales :** <ids de `metrics.md`, repris de la section de l'hypothèse>
-- **Critères de succès :** <repris de `hypothesis.md`, en marquant ceux qui sont « reportés à la phase 2 »>
-- **Taille maximale des circuits en phase 1 :** <qubits, profondeur estimée>
-- **Commandes de reproduction :**
+- **Budgets :** `metrics.md` §2.
+- **Critères de succès :** <repris de `hypothesis.md`>.
+- **Commande :** `PYTHONPATH=src/network-experiments uv run python -m <id>.run --instance … --seed … --method …`
 
-  ```bash
-  export PYTHONPATH=src/network-experiments
-  uv run python -m <id>.run_bench --instance <…> --seed <…> --method <…>
-  ```
+## 4. Écarts au plan
 
-## 5. Préparation de la phase 2 (cloud)
-
-<Runs prévus sur le cloud (instances, qubits, nombre de circuits estimé, crédits estimés) et commandes
-prêtes à lancer.>
-
-## 6. Écarts au plan
-
-<À compléter pendant la session si le procédé change : date, écart, raison.>
+<Date, écart, raison.>

@@ -1,65 +1,40 @@
-# <ID> · <Titre de l'hypothèse> : résultats
+# <ID> · <Titre> : résultats
 
-> Modèle à copier dans `docs/network/hypothesis/<id>/result.md` **à la fin des expériences**. Chaque
-> chiffre doit provenir d'une ligne JSONL de `results/network/bench/<id>/` (définitions dans
-> [`metrics.md`](../../metrics.md)).
+> À copier dans `docs/network/hypothesis/<id>/result.md` **à la fin**. Chaque chiffre provient de
+> `results/network/bench/<id>/*.jsonl` (définitions dans [`metrics.md`](../../metrics.md)).
 
-- **Hypothèse :** <id>. Process suivi : [`process.md`](process.md)
-- **Branche / commit des runs :** `network/<id>-<slug>` @ `<hash>`
+- **Branche @ commit des runs :** `network/<id>-<slug>` @ `<hash>`
 - **Date :** YYYY-MM-DD
-- **Conclusion (`metrics.md` §5) :** **Validée** / **Invalidée** / **Non concluante** <une phrase>
+- **Conclusion :** **Validée** / **Invalidée** / **Non concluante**. <Une phrase.>
 
 ## 1. Résumé
 
-<3 à 5 lignes : ce qui a été testé, le résultat principal chiffré, ce qu'on en retient.>
+<3 lignes : ce qui a été testé, le chiffre principal, ce qu'on en retient.>
 
-## 2. Phase 1 : résultats en local
+## 2. Résultats
 
-Backend `maestro_local`, circuits de 20 qubits au plus. Budget : standard (`metrics.md` §2) <sinon
-préciser>.
+Budget : `metrics.md` §2 <ou écart>. Seeds 0, 1, 2.
 
-| Instance | Méthode | best (gap) | median (gap) | worst | hit@0.01 | med. lp_calls_to_target | med. wall_time_s | max_qubits | n_circuits |
-|---|---|---|---|---|---|---|---|---|---|
-| <…> | <…> | <…> | <…> | <…> | <…/5> | <…> | <…> | <…> | <…> |
+| Instance | Méthode | min (gap) | médiane (gap) | max | lp_calls | wall_time_s | max_qubits | backend |
+|---|---|---|---|---|---|---|---|---|
+| network12 | b0_random | | | | | | 0 | none |
+| network12 | b1_sa_kit | | | | | | 0 | none |
+| network12 | <méthode> | | | | | | | |
+| network24 | … | | | | | | | |
 
-**Métriques spécifiques à l'hypothèse** (E\*, F\*, S5…) :
-
-| Instance | Méthode | <métrique> | <métrique> |
-|---|---|---|---|
-
-**Attribution :**
-
-| Instance | Ablation (A1) | A2 `delta_median_vs_ablation` | A3 p-value | A4 vs B2 (delta, p) |
-|---|---|---|---|---|
+Métriques spécifiques (E1, E5, E6, F1, F2…) : <tableau ou liste>.
 
 ## 3. Critères de succès
 
-| Critère (`hypothesis.md`) | Résultat | Atteint ? |
+| Critère | Valeur mesurée | Atteint ? |
 |---|---|---|
-| <…> | <valeur mesurée> | ✅ / ❌ / ⏳ reporté à la phase 2 |
+| <…> | <…> | ✅ / ❌ / ⏳ non testé |
 
-## 4. Solutions rendables
+## 4. Solution rendue
 
-| Instance | Score | Gap | Fichier `.sol` | `.json` | `check_network_solution` |
+| Instance | Score | Gap | Qubits max | `.sol` | Méthode et seed |
 |---|---|---|---|---|---|
 
-## 5. Analyse
+## 5. Analyse et suite
 
-<Interprétation, limites, surprises, et comparaison avec les résultats des papiers de référence.>
-
-## 6. Reporté à la phase 2 (cloud)
-
-| Run | Pourquoi (qubits, coût) | Commande | Crédits estimés |
-|---|---|---|---|
-
-## 7. Demandes de changement sur H0
-
-<Bugs trouvés ou utilitaires communs à ajouter dans `src/network-experiments/h0/`, ou « aucune ».>
-
-## 8. Suite proposée
-
-<Prochaines expériences, nouvelles hypothèses.>
-
-## Phase 2 : résultats cloud
-
-<À compléter plus tard : mêmes tableaux qu'au §2, avec `backend = qoro_cloud` et les crédits (C4).>
+<Interprétation, limites, prochaine étape ou hypothèse du backlog à lancer.>
