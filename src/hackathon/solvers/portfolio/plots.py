@@ -54,6 +54,12 @@ MARKERS = (
     "P",
     "X",
     "h",
+    "<",
+    ">",
+    "*",
+    "p",
+    "d",
+    "8",
 )  # codage secondaire : l'identité ne repose pas que sur la couleur
 
 STYLE: dict[str, Any] = {
@@ -89,13 +95,14 @@ def _case_order(case: Case) -> tuple:
     return (s, case.instance, lam)
 
 
-def _methods(runs: Sequence[Run]) -> list[str]:
+def _methods(runs: Sequence[Run], limit: int = len(SERIES)) -> list[str]:
+    """Méthodes dans l'ordre d'apparition. ``limit`` : couleurs (8) ou symboles disponibles."""
     seen: list[str] = []
     for r in runs:
         if r.method not in seen:
             seen.append(r.method)
-    if len(seen) > len(SERIES):
-        raise ValueError(f"au plus {len(SERIES)} méthodes par graphe (ici {len(seen)})")
+    if len(seen) > limit:
+        raise ValueError(f"au plus {limit} méthodes par graphe (ici {len(seen)})")
     return seen
 
 
@@ -339,7 +346,7 @@ def plot_size_vs_metric(
     if metric not in METRICS:
         raise ValueError(f"métrique inconnue : {metric} (disponibles : {sorted(METRICS)})")
     xlabel, scale = METRICS[metric]
-    methods = _methods(runs)
+    methods = _methods(runs, limit=len(MARKERS))  # la couleur sert à λ : seul le symbole compte
     colors = _lambda_colors(r.lam for r in runs)
     refs = _references(summarize(runs)) if metric == "gap" else {}
     if metric == "gap":
