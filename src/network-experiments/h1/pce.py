@@ -38,10 +38,18 @@ def _make_encoding(encoding: str):
     raise ValueError(f"encoding doit être l'un de {_ENCODINGS}, reçu {encoding!r}")
 
 
-def _make_backend(use_cloud: bool, shots: int, simulator_cluster: str | None):
+def _make_backend(
+    use_cloud: bool,
+    shots: int,
+    simulator_cluster: str | None,
+    mps_bond_dim: int | None = None,
+    max_retries: int | None = None,
+):
     from hackathon.utils import make_backend
 
-    if not use_cloud or simulator_cluster is None:
+    if not use_cloud or (
+        simulator_cluster is None and mps_bond_dim is None and max_retries is None
+    ):
         return make_backend(use_cloud=use_cloud, shots=shots)
     # Cluster explicite (``qoro_maestro``, ``qoro_cpu``, ``qoro_gpu``) : make_backend fixe qoro_maestro.
     from divi.backends import JobConfig, QoroService
@@ -50,7 +58,18 @@ def _make_backend(use_cloud: bool, shots: int, simulator_cluster: str | None):
 
     if not has_api_key():
         raise RuntimeError("use_cloud=True demande QORO_API_KEY (fichier .env)")
-    return QoroService(job_config=JobConfig(shots=shots, simulator_cluster=simulator_cluster))
+    maestro_config = None
+    if mps_bond_dim is not None:  # simulation MPS côté cloud (circuits > 24 qubits)
+        from divi.backends.runners._maestro import MaestroConfig
+
+        maestro_config = MaestroConfig(
+            simulation_type="MatrixProductState", max_bond_dimension=mps_bond_dim
+        )
+    return QoroService(
+        job_config=JobConfig(shots=shots, simulator_cluster=simulator_cluster or "qoro_maestro"),
+        maestro_config=maestro_config,
+        max_retries=max_retries,
+    )
 
 
 def _ordered_copy(bqm: dimod.BinaryQuadraticModel) -> dimod.BinaryQuadraticModel:
@@ -78,12 +97,15 @@ def make_pce_sampler(
     top_n: int = 100,
     max_local_qubits: int = 24,
     simulator_cluster: str | None = None,
+    mps_bond_dim: int | None = None,
+    max_retries: int | None = None,
 ) -> Sampler:
     """Sampler PCE : ``sample(bqm, seed) -> SampleBatch`` (top ``top_n`` par énergie).
 
     En local (``use_cloud=False``), lève ``ValueError`` *avant* toute exécution si le circuit
     dépasse ``max_local_qubits`` qubits. ``simulator_cluster`` n'est utilisé qu'en cloud (sinon le
-    cluster par défaut de ``make_backend`` : ``qoro_maestro``).
+    cluster par défaut de ``make_backend`` : ``qoro_maestro``). ``mps_bond_dim`` (cloud) : simulation
+    MPS avec cette dimension de lien ; ``max_retries`` (cloud) : plafond de sondages (3 s chacun).
     """
     _make_encoding(encoding)  # valide le nom tout de suite
 
@@ -108,7 +130,7 @@ def make_pce_sampler(
             n_layers=n_layers,
             optimizer=MonteCarloOptimizer(population_size=population),
             max_iterations=iterations,
-            backend=_make_backend(use_cloud, shots, simulator_cluster),
+            backend=_make_backend(use_cloud, shots, simulator_cluster, mps_bond_dim, max_retries),
             seed=int(seed),
         )
         if pce.n_qubits != n_qubits:  # garde-fou : la formule doit suivre Divi

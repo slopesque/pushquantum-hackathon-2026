@@ -43,6 +43,8 @@ def build_params(args: argparse.Namespace) -> dict[str, Any]:
             "population": args.pce_population,
             "iterations": args.pce_iterations,
             "top_n": args.pce_top_n,
+            "mps_bond_dim": args.pce_mps_bond_dim,
+            "max_retries": args.pce_max_retries,
         }
         params["quantum_rounds"] = args.quantum_rounds
     return params
@@ -70,6 +72,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--pce-encoding", default="poly")
     p.add_argument("--pce-top-n", type=int, default=100)
     p.add_argument("--cloud", action="store_true", help="PCE sur le cloud Qoro (crédits !)")
+    p.add_argument("--pce-mps-bond-dim", type=int, default=None, help="cloud : simulation MPS")
+    p.add_argument("--pce-max-retries", type=int, default=None, help="cloud : plafond de sondages")
     p.add_argument("--max-lp-calls", type=int, default=None, help="essai : remplace le budget")
     p.add_argument("--time-limit", type=float, default=None, help="essai : remplace le plafond")
     p.add_argument("--no-write", action="store_true", help="ne pas écrire la ligne JSONL")
