@@ -55,8 +55,8 @@ Le jury juge deux choses : *l'échelle* (taille de l'instance, qubits du plus gr
 #single_column_table(
   headers: ("Piste", "Rôle", "État"),
   content: (
-    [P1. Encodage entier $v in {-3..3}$], [Réduire le problème], [#encours],
-    [P2. Évaluateur incrémental], [Passer à l'échelle], [#afaire],
+    [P1. Encodage entier $v in {-3..3}$], [Réduire le problème], [#fait],
+    [P2. Évaluateur incrémental], [Passer à l'échelle], [#fait],
     [P3. Harnais de test], [Mesurer], [#afaire],
     [P4. Recherche locale rapide + mouvements par paires], [Baseline classique], [#afaire],
     [P5. Métaheuristiques (SA, tabou) en entiers], [Baseline forte], [#afaire],
@@ -108,6 +108,35 @@ sur a400, soit environ 70 s par passe. Un mouvement $v_(t,i) arrow.r v_(t,i) + d
 
 *Validation :* sur des milliers de solutions aléatoires et sur les solutions de référence QOBLIB, le score
 recalculé doit être *exactement* celui de l'arbitre.
+
+#keybox(title: "Résultat (implémenté)")[
+  - `src/hackathon/solvers/portfolio/problem.py` : *notre formulation du problème*. Elle charge les données
+    QOBLIB (cours, covariances), calcule les coefficients du modèle, l'objectif, les contraintes, et lit et
+    écrit les `.sol`. Elle ne dépend pas de l'arbitre.
+  - `src/hackathon/solvers/portfolio/evaluator.py` : `PortfolioState`, une solution plus les quantités
+    maintenues ($G_t v_t$ avec $G_t = R_t + R_t^top$, position nette, unités ouvertes, objectif).
+    - `delta(changes)` : variation exacte pour n'importe quel petit mouvement (simple, paire, bloc, échange).
+    - `apply(changes)` : applique le mouvement en $O(n)$ par jour touché.
+    - `single_move_deltas()` : les $2 T n$ mouvements simples d'un coup, vectorisés.
+
+  *Tests.* L'évaluateur est testé contre notre propre objectif. L'arbitre ne sert qu'à valider la formulation
+  (`tests/test_portfolio_problem.py`, 8 cas de a003 à a200) : coefficients, objectif, contraintes et `.sol`
+  identiques ; solutions de référence retrouvées au point près. Aucune des 16 solutions de référence
+  examinées n'est longue et courte sur la même case.
+
+  *Vitesse sur a400_t15 :* évaluer les 12 000 mouvements simples prend 0,2 ms, contre 31 s avec l'arbitre.
+  Construire le modèle prend 0,1 à 1,4 s (17 s avec l'arbitre), plus 7 s de lecture des fichiers.
+]
+
+#warnbox[
+  - `delta` ne vérifie la faisabilité que sur les jours touchés : c'est exact tant que la solution courante est
+    faisable, ce qui est le cas pendant une recherche locale.
+  - *Arrondis.* Les coefficients sont arrondis comme dans le modèle Zimpl de QOBLIB (demi-entier loin de
+    zéro). Le risque est calculé en flottants ; les rares valeurs proches d'un demi-entier sont recalculées en
+    fractions exactes (2 cellules sur a200 avec $lambda = 10^(-2)$).
+  - *Propriété du modèle officiel, conservée :* le passage du jour $T-2$ au jour $T-1$ n'est pas facturé, seule
+    la liquidation l'est. On la garde, car c'est sur ce modèle que les solutions sont jugées.
+]
 
 == P3. Harnais de test
 
