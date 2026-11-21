@@ -246,7 +246,7 @@ commités (on les régénère depuis `runs.csv`) ; ceux qu'on veut garder sont c
 
 === Premier repère : le portefeuille vide
 
-Lancé sur les 256 cas (`results/portfolio/bench/20261121T162856Z_baseline-empty/`, 2 minutes, surtout du
+Lancé sur les 256 cas (`results/portfolio/bench/20261121T165444Z_baseline-empty/`, 2 minutes, surtout du
 chargement de données). Ne rien détenir vaut $-100 T$, soit 97 % à 100 % de gap dans presque tous les cas.
 Les exceptions sont les grands $lambda$, où le risque rend presque toutes les positions perdantes : avec
 $lambda = 10^(-2)$, le portefeuille vide *est* le meilleur connu sur les 8 instances a010 (gap nul), mais il
@@ -493,7 +493,7 @@ Sur les 128 cas avec un meilleur connu (a010 et a050, jeu `known`, 104 s pour le
     [`ls-full-b20`], [7,2 %], [0,00 %], [62], [92], [0,06 s],
   ),
   false,
-  [Recherche locale depuis le portefeuille vide, 128 cas (`results/portfolio/bench/…_p4-known/`).],
+  [Recherche locale depuis le portefeuille vide, 128 cas (`results/portfolio/bench/20261121T165623Z_p4-known/`).],
 )
 
 Gap moyen de `ls-full` selon $lambda$ : 0 % jusqu'à $10^(-5)$, 0,2 % à $5 dot 10^(-5)$ et $10^(-4)$, 3,4 % à
