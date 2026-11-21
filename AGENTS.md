@@ -168,6 +168,13 @@ conséquence.
 
 - Messages au format **Conventional Commits** : `type(scope): description`, par ex.
   `feat(portfolio): add PCE pipeline`, `chore(uv): pin python 3.12`, `fix(network): repair degree constraint`.
+  Types usuels : `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `chore`, `ci`.
+- **Commits atomiques :** un commit = un seul changement logique, qui se comprend et se revert seul.
+  - Ne pas mélanger dans un même commit : code et documentation sans rapport, refactor et nouvelle
+    fonctionnalité, changements de dépendances et code applicatif, portefeuille et network.
+  - Si un fichier contient plusieurs changements indépendants (par ex. `pyproject.toml` + `uv.lock`), les
+    séparer en commits successifs, avec `uv lock` à chaque étape pour que chaque commit reste cohérent.
+  - Chaque commit doit laisser le repo dans un état qui fonctionne (`uv sync`, `uv run pytest`).
 - **Ne pas signer les commits :** pas de trailer `Co-Authored-By:`, pas de mention « Generated with … »
   ni d'autre attribution IA dans les messages de commit ou les descriptions de PR, et pas de signature
   GPG (`-S`). Le commit est écrit au nom de l'auteur git configuré, sans rien ajouter.
