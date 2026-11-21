@@ -9,7 +9,7 @@ authors = [
     { name = "Ugo Col", email = "ugoteocol@gmail.com" },
     { name = "Alexandre Baconnet", email = "alexandre.baconnet@epita.fr" },
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "dimod>=0.12.23",
     "dwave-samplers>=1.8.0",
