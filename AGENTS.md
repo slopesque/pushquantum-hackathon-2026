@@ -101,7 +101,8 @@ pushquantum-hackathon-2026/
 │   ├── _commun.typ                  # Boîtes partagées : keybox, enbref, warnbox
 │   ├── .base/base.typ               # Squelette à copier pour un nouveau document
 │   └── portfolio/
-│       └── pipeline_base.typ        # Pipeline de résolution du kit Qoro, étape par étape
+│       ├── pipeline_base.typ        # Pipeline de résolution du kit Qoro, étape par étape
+│       └── pistes.typ               # Pistes explorées (P1–P10) et leur état : À TENIR À JOUR
 │                                    #   PDF générés dans formalisations/out/ (ignoré par git)
 ├── tests/                   # pytest : l'arbitre reproduit les références, nos .sol sont valides
 ├── .env.example             # Modèle pour .env (QORO_API_KEY)
