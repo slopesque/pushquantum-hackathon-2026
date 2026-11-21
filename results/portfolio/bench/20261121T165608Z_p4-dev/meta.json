@@ -1,0 +1,18 @@
+{
+  "set": "dev",
+  "methods": [
+    "empty",
+    "ls-single",
+    "ls-block",
+    "ls-pair",
+    "ls-full",
+    "ls-full-b20"
+  ],
+  "seeds": 1,
+  "time_limit": 300.0,
+  "label": "p4-dev",
+  "git": "c1f7430",
+  "timestamp": "20261121T165608Z",
+  "total_time_s": 13.38,
+  "n_runs": 72
+}
