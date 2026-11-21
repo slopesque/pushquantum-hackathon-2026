@@ -92,6 +92,8 @@ pushquantum-hackathon-2026/
 │       ├── portfolio/               #   Branches portfolio/*
 │       │   ├── problem.py           #   Notre formulation : données, coefficients, objectif, .sol (P1)
 │       │   ├── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
+│       │   ├── local_search.py      #   Recherche locale : blocs, paires, échanges (P4)
+│       │   ├── methods.py           #   Méthodes enregistrées pour le banc d'essai (ls-single, ls-full…)
 │       │   ├── benchmark.py         #   Grille des cas, meilleurs connus, registre des méthodes (P3)
 │       │   └── plots.py             #   Graphes des benchmarks (P3)
 │       └── network/                 #   Branches network/*
@@ -172,8 +174,8 @@ uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/po
 2. **Données.** `ProblemCache` charge chaque instance une seule fois (cache disque `data/qoblib/`) et
    construit un `PortfolioProblem` par λ.
 3. **Méthodes.** `METHODS` est un registre nom → fonction `(problem, rng, time_limit) → v`, rempli par
-   `@register("nom")`. Le module de la méthode doit être importé par `benchmark.py` (ou par le script)
-   pour qu'elle soit enregistrée. `rng = np.random.default_rng(seed)` : un run est reproductible à seed
+   `@register("nom")`. Les méthodes vivent dans `methods.py`, que `run_benchmark` importe : une nouvelle
+   méthode s'y ajoute (ou dans un module importé par `methods.py`). `rng = np.random.default_rng(seed)` : un run est reproductible à seed
    égale. La méthode doit respecter `time_limit` et rendre une solution **faisable**.
 4. **Exécution.** `run_benchmark` lance chaque (cas, méthode, seed), chronomètre, note la solution avec
    **notre** modèle (`problem.objective`, `is_feasible`) et calcule le gap au meilleur connu
