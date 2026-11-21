@@ -109,6 +109,9 @@ SETS: dict[str, list[Case]] = {
     "known": grid(["a010_t10", "a010_t15", "a050_t10", "a050_t15"]),  # avec meilleur connu
     "large": grid(["a200_t10", "a200_t15", "a400_t10", "a400_t15"]),  # sans meilleur connu
     "a400": grid(["a400_t15"], ["orig"]),
+    # Les cas où la recherche locale P4 est faible (grands λ) : le terrain du LNS (P7).
+    "hard": grid(["a010_t10"], ["orig"], ["5e-4", "1e-3", "1e-2"])
+    + grid(["a050_t10"], ["orig", "s01"], ["5e-4", "1e-3", "1e-2"]),
     "full": grid(),
 }
 
