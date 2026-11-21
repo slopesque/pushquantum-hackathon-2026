@@ -1,0 +1,18 @@
+{
+  "set": "hard",
+  "methods": [
+    "ls-full",
+    "lns-enum",
+    "lns-sa-small",
+    "lns-qaoa",
+    "lns-sa",
+    "lns-pce"
+  ],
+  "seeds": 1,
+  "time_limit": 60.0,
+  "label": "p7-hard",
+  "git": "ea62c40",
+  "timestamp": "20261121T183659Z",
+  "total_time_s": 2845.84,
+  "n_runs": 54
+}
