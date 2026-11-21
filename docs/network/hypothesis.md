@@ -33,7 +33,7 @@ s'arrête et on choisit une hypothèse du backlog.
 
 ## H0 · Baseline minimale
 
-**Statut : En cours**. Branche : `network/h0-baseline`. Code : `src/network-experiments/h0/`.
+**Statut : Validée — [résultats](hypothesis/h0/result.md)**. Branche : `network/h0-baseline`. Code : `src/network-experiments/h0/`.
 
 L'objectif est de **recalculer le moins possible**. On ne refait que ce qui sert de point de comparaison à
 H1, et tout tourne en quelques secondes.

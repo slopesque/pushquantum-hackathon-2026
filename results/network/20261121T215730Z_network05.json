@@ -1,0 +1,30 @@
+{
+  "hypothesis": "h0",
+  "method": "b0_random",
+  "instance": "network05",
+  "seed": 0,
+  "params": {
+    "stalled": true
+  },
+  "budget": {
+    "lp_calls": 500,
+    "time_s": 120.0
+  },
+  "score": 65500,
+  "best_known": 65500,
+  "gap": 0.0,
+  "lp_calls": 216,
+  "wall_time_s": 4.02,
+  "n_circuits": 0,
+  "backend": "none",
+  "n_vars": 20,
+  "max_qubits": 0,
+  "feasible_mass": null,
+  "score_raw": null,
+  "score_after_ls": null,
+  "spearman_rho": null,
+  "top10_precision": null,
+  "git": "3e3f3ea",
+  "timestamp": "20261121T215730Z",
+  "sol_file": "20261121T215730Z_network05.sol"
+}
