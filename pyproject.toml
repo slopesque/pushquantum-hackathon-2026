@@ -44,3 +44,6 @@ extend-exclude = ["references"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ty.environment]
+extra-paths = ["references"]
