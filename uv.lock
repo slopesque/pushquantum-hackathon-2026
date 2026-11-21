@@ -2680,8 +2680,10 @@ dependencies = [
     { name = "dwave-samplers" },
     { name = "networkx" },
     { name = "numpy" },
+    { name = "python-dotenv" },
     { name = "qoro-divi", extra = ["jupyter", "qubo-decompose"] },
     { name = "requests" },
+    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -2698,8 +2700,10 @@ requires-dist = [
     { name = "dwave-samplers", specifier = ">=1.8.0" },
     { name = "networkx", specifier = ">=3.6.1" },
     { name = "numpy", specifier = ">=2.4.6" },
+    { name = "python-dotenv", specifier = ">=1.2.4" },
     { name = "qoro-divi", extras = ["jupyter", "qubo-decompose"], specifier = "==0.16.2" },
     { name = "requests", specifier = ">=2.34.2" },
+    { name = "scipy", specifier = ">=1.17.1" },
 ]
 
 [package.metadata.requires-dev]
