@@ -13,6 +13,7 @@ requires-python = ">=3.12"
 dependencies = [
     "dimod>=0.12.23",
     "dwave-samplers>=1.8.0",
+    "matplotlib>=3.11.2",
     "networkx>=3.6.1",
     "numpy>=2.4.6",
     "python-dotenv>=1.2.4",
