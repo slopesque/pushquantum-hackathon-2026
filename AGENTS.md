@@ -63,7 +63,9 @@ Tables des meilleurs connus :
 
 1. **`references/` est en lecture seule.** C'est le kit original de Qoro. `references/qoblib_tools.py` est
    **l'arbitre** (portage des checkers officiels de QOBLIB) : on ne le modifie jamais. On l'importe via
-   `from hackathon.referee import qt`.
+   `from hackathon.referee import qt`, **uniquement dans les tests et pour valider les `.sol` à rendre**.
+   Les solveurs travaillent sur notre propre formulation du problème, sans dépendre de l'arbitre ni
+   chercher à le reproduire.
 2. **Toujours comparer à une baseline classique** (SA, repair, recherche locale) avant d'attribuer un gain
    au quantique. Le kit insiste : le classique fait l'essentiel du travail.
 3. **Un résultat non reproductible ne compte pas.** Chaque run passe par `hackathon.utils.save_run`, qui
