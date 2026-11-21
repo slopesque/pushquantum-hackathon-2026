@@ -84,7 +84,10 @@ pushquantum-hackathon-2026/
 │   ├── qoblib_tools.py              # L'ARBITRE : chargeurs, scoreurs officiels, QUBO builders, écriture .sol
 │   └── README.md                    # Règles du hackathon (scoring, formats .sol)
 ├── docs/                    # Documentation de travail (humains + agents)
-│   └── network/                     # state-of-the-art.md (revue de littérature), hypothesis.md (H0…H9)
+│   └── network/                     # state-of-the-art.md, hypothesis.md (H0…H9), metrics.md, workflow.md
+│       └── hypothesis/<id>/             # process.md + result.md par hypothèse (modèles dans _template/)
+├── src/network-experiments/ # Expériences network, un paquet par hypothèse (h0/ … h9/), hors paquet installé :
+│                            #   PYTHONPATH=src/network-experiments (voir docs/network/workflow.md)
 ├── src/hackathon/           # Notre code réutilisable, installé en mode éditable par `uv sync`
 │   ├── referee.py                   # `from hackathon.referee import qt` : importe l'arbitre sans le copier
 │   ├── utils.py                     # .env, make_backend(), gap(), save_run(), git_hash()
@@ -92,6 +95,7 @@ pushquantum-hackathon-2026/
 │                                    #   network.py (branches network/*). Code partagé dans utils.py.
 ├── notebooks/               # Explorations (marimo de préférence, jupyter accepté)
 │                            #   Les copies des notebooks de référence y sont ignorées par git
+│                            #   network/<id>/ : notebooks d'une hypothèse network
 ├── scripts/                 # Runs reproductibles en CLI, par ex.
 │                            #   `uv run scripts/run_portfolio.py --instance po_a010_t10_orig --seed 0`
 ├── results/                 # Sorties des runs, COMMITÉES
@@ -113,6 +117,9 @@ pushquantum-hackathon-2026/
   `save_run(...)`.
 - **Les données QOBLIB** sont téléchargées par l'arbitre à la première utilisation, dans
   `references/qoblib_data/` (ignoré par git).
+- **Expériences network (hypothèses H0 à H9) :** conventions spécifiques, décrites dans
+  `docs/network/workflow.md` (code dans `src/network-experiments/<id>/`, notebooks dans
+  `notebooks/network/<id>/`, runs dans `results/network/bench/<id>/`).
 
 ### Format des résultats
 
@@ -211,18 +218,34 @@ rendable est un `network<NN>.sol` validé par `qt.check_network_solution` et enr
 - `docs/network/state-of-the-art.md` : revue de littérature (DOI, auteurs, résultats) — **ne pas refaire
   la recherche**, la compléter si besoin.
 - `docs/network/hypothesis.md` : hypothèses **H0 à H9**, indépendantes, avec protocole commun
-  (instances, seeds 0–4, métriques, baselines B0–B3), critères de succès et papiers de référence.
+  (instances, seeds 0–4, baselines B0–B3), métriques principales, critères de succès chiffrés et papiers
+  de référence.
+- `docs/network/metrics.md` : **référentiel obligatoire des métriques** (Q qualité, C coût, S échelle,
+  E échantillonnage, F substitut, A attribution) avec définition exacte, calcul, unité et clé JSON ;
+  budgets standard par instance (comparaison à budget LP égal) ; schéma JSON d'un run ; agrégation sur
+  5 seeds ; règles de décision (validée / invalidée / non concluante).
+- `docs/network/workflow.md` : **process commun des agents** (id `h0`…`h9`, worktree Git, arborescence du
+  code, phases local puis cloud, livrables `process.md` et `result.md`, checklist de fin de session).
+- `docs/network/hypothesis/<id>/` : `process.md` (objectif et procédé, écrit au début) et `result.md`
+  (rapport, écrit à la fin) de chaque hypothèse ; modèles dans `docs/network/hypothesis/_template/`.
 
 ### Comment travailler
 
+Suivre **`docs/network/workflow.md`**. En résumé :
+
 1. Commencer par **H0** (socle : scorer avec cache et duales, 2-exchanges, baselines B0–B3, harnais de
-   benchmark) si ce n'est pas déjà fait — branche `network/baseline`, module
-   `src/hackathon/solvers/network.py`.
-2. Prendre **une** hypothèse `À faire`, sur la branche `network/h<N>-<slug>`, code dans
-   `src/hackathon/solvers/network_h<N>.py`, scripts dans `scripts/network_h<N>_*.py`.
-3. Mettre au point en local (Maestro), cloud seulement pour un pipeline validé ; noter les crédits.
-4. Rapporter dans `docs/network/hypothesis.md` (statut + tableau de résultats + conclusion), et mettre à
-   jour cette section si une hypothèse change la stratégie globale.
+   benchmark, métriques) si ce n'est pas déjà fait : branche `network/h0-baseline`, code dans
+   `src/network-experiments/h0/`.
+2. Une hypothèse = un id (`h0`…`h9`) = un **worktree Git** et une branche `network/<id>-<slug>`.
+3. **Phase 1 en local** (Maestro, circuits ≤ 20 qubits) ; le cloud (phase 2) vient plus tard, sur
+   décision humaine ; les critères qui demandent plus de qubits sont marqués « reportés à la phase 2 ».
+4. Écrire `docs/network/hypothesis/<id>/process.md` **avant de coder**.
+5. Mesurer **exactement** les métriques de `docs/network/metrics.md` (5 seeds, budgets standard, une ligne
+   JSON par run dans `results/network/bench/<id>/<méthode>.jsonl`) ; aucun gain n'est attribué au
+   quantique sans ablation classique (A2 < 0 et p < 0,05).
+6. À la fin, écrire `docs/network/hypothesis/<id>/result.md` et mettre à jour la ligne `Statut` de
+   l'hypothèse dans `docs/network/hypothesis.md`. Le tableau ci-dessous est mis à jour à la fusion des
+   branches, pas par les agents (évite les conflits).
 
 ### État des hypothèses
 

@@ -9,15 +9,18 @@
 
 1. Choisir une hypothèse dont le statut est `À faire`. Les priorités sont dans le tableau en fin de
    document.
-2. Créer la branche `network/h<N>-<slug>` depuis la branche qui porte H0. Si H0 n'existe pas encore,
-   commencer par H0.
-3. Mettre le code réutilisable dans `src/hackathon/solvers/network_h<N>.py` (un module par hypothèse,
-   pour éviter les conflits entre branches), le run reproductible dans `scripts/network_h<N>_*.py`, et
-   l'exploration dans `notebooks/`.
-4. Appliquer le **protocole commun** ci-dessous et finir chaque run rendable par `save_run(...)`.
-5. Mettre à jour **le statut et la section Résultats** de l'hypothèse dans ce fichier : chiffres, chemin
-   des `.sol` et `.json`, conclusion (validée, invalidée ou non concluante), pistes de suite.
-6. Lire les PDF des papiers avec `uv run markitdown <fichier.pdf>` (voir AGENTS.md).
+2. Suivre le **workflow commun** de [`workflow.md`](workflow.md) :
+   - un worktree et une branche `network/<id>-<slug>` par hypothèse, où `<id>` vaut `h0` à `h9` ;
+   - le code dans `src/network-experiments/<id>/` et les notebooks dans `notebooks/network/<id>/` ;
+   - la phase 1 en local, avec des circuits de 20 qubits au plus ;
+   - `docs/network/hypothesis/<id>/process.md` au début, et `result.md` à la fin.
+
+   Si H0 n'existe pas encore, commencer par H0.
+3. Appliquer le **protocole commun** ci-dessous, mesurer les métriques définies dans
+   [`metrics.md`](metrics.md) et finir chaque run rendable par `save_run(...)`.
+4. À la fin, mettre à jour **la ligne `Statut`** de l'hypothèse dans ce fichier (statut et lien vers
+   `hypothesis/<id>/result.md`). Le détail des résultats va dans `result.md`, pas ici.
+5. Lire les PDF des papiers avec `uv run markitdown <fichier.pdf>` (voir AGENTS.md).
 
 ## Protocole commun (à respecter pour que les hypothèses soient comparables)
 
@@ -33,23 +36,26 @@
 
 Les meilleurs connus à jour sont dans la [table QOBLIB](https://github.com/ZIB-AOPT/QOBLIB/blob/main/08-network/solutions/README.md).
 
-### Mesures à rapporter (dans le `.json` de `save_run` et dans la section Résultats)
+### Métriques et budgets
 
-- **Qualité :**
-  - meilleur score LP (`qt.route_min_congestion(...).objective`) ;
-  - `gap` par rapport au meilleur connu ;
-  - médiane et minimum sur **5 seeds (0 à 4)**.
-- **Coût :**
-  - temps de calcul total ;
-  - nombre d'appels au LP ;
-  - nombre de circuits et crédits cloud consommés.
-- **Échelle :** nombre de variables binaires de l'instance, et **qubits du plus gros programme**.
-- **Qualité de l'échantillonnage :**
-  - taux de faisabilité des échantillons bruts, avant `repair_topology` ;
-  - nombre de topologies distinctes valides ;
-  - rang de la meilleure topologie trouvée (sur `network05`).
-- **Attribution :** le même pipeline avec le composant quantique remplacé par un équivalent classique
-  (SA, tirage aléatoire, variante déquantisée). **Pas de gain attribué au quantique sans cette ablation.**
+Les définitions exactes (formule, calcul, unité, clé JSON), les budgets standard, le schéma JSON et les
+règles de décision sont dans **[`metrics.md`](metrics.md)**. Ce document est la référence. Résumé :
+
+| Famille | Métriques | Toujours obligatoire ? |
+|---|---|---|
+| Qualité | Q1 `score`, Q2 `gap`, Q4 `hit_target` | Oui |
+| Coût | C1 `lp_calls`, C2 `wall_time_s`, C3 `n_circuits`, C4 `credits_used`, C6 `lp_calls_to_target`, C8 `trajectory` | Oui |
+| Échelle | S1 `n_vars`, S2 `n_vars_model`, S3 `max_qubits` | Oui |
+| Échantillonnage | E1 `feasible_mass`, E3 `n_distinct_valid`, E5 `score_raw`, E6 `score_after_ls`, E7 `p_opt`, E8 `rank_best` | Si la méthode échantillonne |
+| Substitut | F1 `spearman_rho`, F2 `top10_precision`, F3 `ref_percentile` (sur le jeu de test figé) | Si la méthode introduit un QUBO |
+| Attribution | A1 `ablation_method`, A2 `delta_median_vs_ablation`, A3 `p_value_vs_ablation`, A4 vs B2 | Si la méthode est quantique |
+
+**Règles clés :**
+- 5 seeds (0 à 4).
+- Comparaisons **à budget LP égal** (`metrics.md` §2).
+- La statistique principale est la **médiane** de Q1.
+- Un gain quantique n'est retenu que si A2 < 0 **et** A3 < 0,05.
+- Le gain d'un échantillonneur se lit sur E5 (avant recherche locale), pas sur E6.
 
 ### Baselines obligatoires (fournies par H0)
 
@@ -65,7 +71,7 @@ Les meilleurs connus à jour sont dans la [table QOBLIB](https://github.com/ZIB-
 - On met au point en local (`make_backend(use_cloud=False)`). On ne passe au cloud qu'une fois le
   pipeline validé sur `network05` et `network12`, et on note les crédits consommés.
 - `references/qoblib_tools.py` ne se modifie jamais. Si on a besoin des duales du LP ou d'un cache, on
-  écrit un wrapper dans `src/hackathon/solvers/` (on peut réutiliser `qt._routing_lp`).
+  écrit un wrapper dans `src/network-experiments/h0/` (on peut réutiliser `qt._routing_lp`).
 - Un résultat rendable passe par `qt.route_integral`, `qt.write_network_solution`,
   `qt.check_network_solution`, puis `save_run`.
 
@@ -73,7 +79,7 @@ Les meilleurs connus à jour sont dans la [table QOBLIB](https://github.com/ZIB-
 
 ## H0 · Socle commun (prérequis)
 
-**Statut : À faire**. Branche suggérée : `network/baseline`. Module : `src/hackathon/solvers/network.py`.
+**Statut : À faire**. Branche : `network/h0-baseline`. Code : `src/network-experiments/h0/`.
 
 Ce n'est pas une hypothèse : c'est l'outillage dont toutes les autres ont besoin.
 
@@ -89,15 +95,32 @@ Ce n'est pas une hypothèse : c'est l'outillage dont toutes les autres ont besoi
      doublon), et des 3-exchanges.
 4. **Baselines B0 à B3**, plus un **parallel tempering B2** fidèle à la description de Gupta (dans
    `state-of-the-art.md` §0).
-5. **Harnais de benchmark.** `scripts/network_bench.py --method <m> --instance networkNN --seed s
-   --budget <appels LP ou secondes>` écrit une ligne CSV ou JSON par run dans `results/network/bench/`.
-6. **Tests pytest :**
+5. **Harnais de benchmark réutilisable.** `python -m h0.run_bench --method <m> --instance networkNN --seed s`
+   (avec `PYTHONPATH=src/network-experiments`) applique les budgets standard de `metrics.md` §2 et écrit
+   **une ligne JSON par run** dans `results/network/bench/<id>/<méthode>.jsonl`, au schéma de
+   `metrics.md` §6. Les autres hypothèses doivent pouvoir y brancher leurs propres méthodes.
+6. **Instrumentation des métriques** (`src/network-experiments/h0/metrics.py`) :
+   - compteurs C1 et C1b du scorer, chronomètre C2, enregistrement de la trajectoire C8 à chaque
+     amélioration, avec C6 et C7 calculés à partir d'elle ;
+   - fonctions E1 à E8 (à partir d'une liste de bitstrings et de probabilités) et F1 à F3 ;
+   - génération et sauvegarde des **jeux de test figés** `results/network/testsets/networkNN.json`
+     (`metrics.md` §3.F) pour `network05`, `network12`, `network16` et `network24` ;
+   - agrégation sur les seeds (`metrics.md` §4) et tests A2 à A4 : un script
+     `python -m h0.report <id>/<méthode> [--vs <id>/<ablation>]` qui imprime les tableaux Markdown du
+     modèle `result.md`.
+7. **Tests pytest :**
    - le cache rend le même score que `qt.route_min_congestion` ;
    - un 2-exchange préserve `qt.is_valid_topology` ;
-   - B2 retrouve l'optimum de `network05` (65 500).
+   - B2 retrouve l'optimum de `network05` (65 500) ;
+   - le JSON produit contient toutes les clés de `metrics.md` §6.
 
-**Critère de fin :** les tableaux B0 à B3 sont remplis pour `network05`, `network12` et `network24`
-(5 seeds), et servent de référence à toutes les autres hypothèses.
+**Métriques principales :** toutes celles de `metrics.md`, puisque H0 les implémente.
+
+**Critère de fin :**
+- les runs B0 à B3 (5 seeds, budgets standard) existent pour `network05`, `network12`, `network16` et
+  `network24`, avec Q1, Q2, C1, C2 et C8 ;
+- B2 atteint `hit_target["0"]` sur `network05` sur 5/5 seeds ;
+- les tableaux agrégés (`metrics.md` §4) sont recopiés dans `docs/network/hypothesis/h0/result.md`.
 
 ---
 
@@ -128,10 +151,15 @@ mieux que B1 avec le substitut d'origine, à budget LP égal.
    - Sur `network05`, rang de l'optimum publié dans le QUBO appris (characterization avec un état de
      référence, voir H2).
 
+**Métriques principales :** F1, F2, F3 (substitut appris contre substitut du kit, sur le même jeu de
+test), Q1 et Q2 médians, C6, et A2 et A3 pour la partie quantique.
+
 **Critères de succès.**
-- Spearman nettement au-dessus de celui du substitut du kit.
-- À budget LP égal, meilleur score que B1 sur `network12` et `network16`.
-- Bonus : un échantillonneur quantique sur ce QUBO s'approche de B2.
+- F1 (`spearman_rho`) ≥ F1(kit) + 0,2 **et** F2 ≥ 0,3 sur `network12` et `network16`.
+- À budget LP égal, médiane de Q1 de « B1 avec substitut appris » < médiane de Q1 de B1, avec
+  p < 0,05 (Mann-Whitney sur 5 seeds) sur `network12` et `network16`.
+- Bonus : un échantillonneur quantique (QAOA ou PCE) sur ce QUBO a un E5 au plus 2 % au-dessus de la
+  médiane de B2.
 
 **Références.**
 - Kitai et al. 2020, [10.1103/PhysRevResearch.2.013319](https://doi.org/10.1103/PhysRevResearch.2.013319)
@@ -175,9 +203,15 @@ plus bas dans le spectre du QUBO. Bien réglé, λ augmente le taux de faisabili
    l'optimum publié comme `reference_states`, pour connaître son rang dans le spectre.
 5. Rejouer B1 et B3 avec ce substitut.
 
+**Métriques principales :** F1, F2, F3 (et F4 si cloud), E1 pour chaque λ testé, Q1 et Q2 médians de B1
+et B3 rejoués avec le nouveau substitut.
+
 **Critères de succès.**
-- Rang de l'optimum publié dans le substitut meilleur qu'avec celui du kit.
-- B1 et B3 améliorés sur `network12`.
+- F3 (`ref_percentile`) de l'optimum publié < F3(kit) sur `network05` et `network08`, et F1 ≥ F1(kit) + 0,1.
+- Avec le λ retenu, E1 (`feasible_mass`) de B1 ≥ E1 avec λ = 1 (réglage du notebook), sans dégrader
+  E5.
+- Médiane de Q1 de B1 et de B3 strictement meilleure qu'avec le substitut du kit sur `network12`
+  (p < 0,05).
 
 **Références.**
 - Alessandroni et al. 2025, [10.1038/s41534-025-01067-0](https://doi.org/10.1038/s41534-025-01067-0)
@@ -216,7 +250,13 @@ Benders.
 3. Résoudre le QUBO mis à jour avec SA, puis QAOA partitionné ou PCE (Divi). Garder un archivage élitiste.
 4. Comparer à B1 et B2. Mesurer la vitesse de convergence en appels LP.
 
-**Critères de succès.** Meilleur que B1, et une convergence monotone de la meilleure topologie.
+**Métriques principales :** Q1 et Q2 médians, C6 (`lp_calls_to_target`), C8 (trajectoire par
+itération de la boucle), A2 et A3 contre la même boucle **sans** mise à jour par les duales.
+
+**Critères de succès.**
+- Médiane de Q1 < médiane de Q1 de B1 à budget LP égal, avec p < 0,05, sur `network12` et `network16`.
+- Dans l'ablation sans duales, A2 < 0 avec A3 < 0,05 : ce sont bien les duales qui apportent le gain.
+- Médiane de Q1 au plus 2 % au-dessus de celle de B2 sur `network16`.
 
 **Références.**
 - Zhao et al. 2022, [10.1109/WCNC51071.2022.9771632](https://doi.org/10.1109/WCNC51071.2022.9771632)
@@ -263,9 +303,13 @@ circuits égal.
 5. **Passage à l'échelle.** Partitionner par **groupes de lignes** : chaque sous-programme garde des
    lignes complètes, pour que le Dicke et le XY restent valides. Combiner avec H9.
 
+**Métriques principales :** E1 (`feasible_mass`), E7 (`p_opt`), E8 (`rank_best`), E5, S3, S5
+(`max_depth`), C3. Comparaison avec le QAOA à pénalités du notebook, à couches, shots et circuits égaux.
+
 **Critères de succès.**
-- Faisabilité brute ≥ 10× celle du QAOA avec pénalités.
-- P(optimum) plus élevée sur `network05`.
+- E1 ≥ 10 × E1(QAOA à pénalités) sur `network05` et `network06`.
+- E7 (`p_opt`) > E7(QAOA à pénalités) sur `network05`, sur 5/5 seeds.
+- Avec le partitionnement par lignes : E5 médian < E5 médian de B3 sur `network12` (p < 0,05).
 
 **Références.**
 - Hadfield et al. 2019, [10.3390/a12020034](https://doi.org/10.3390/a12020034)
@@ -304,8 +348,14 @@ L'objectif et les contraintes restantes deviennent d'ordre supérieur (HUBO, sup
    permutations, s'inspirer des réseaux de tri de Friedl 2026.
 3. Comparer au one-hot : qubits, profondeur, faisabilité, meilleur score, sur `network05` à `network10`.
 
-**Critères de succès.** Moins de qubits à qualité égale (ou mieux), et une profondeur de circuit qui reste
-raisonnable.
+**Métriques principales :** S2 (`n_vars_model`), S3 (`max_qubits`), S5 (`max_depth`), E1, E5, Q1 et Q2
+médians, comparés à l'encodage one-hot à budget égal.
+
+**Critères de succès.**
+- S3 ≤ 0,5 × S3(one-hot) sur la même instance.
+- Médiane de E5 au plus 1 % au-dessus de celle du one-hot sur `network05` à `network10` (pas de
+  différence significative : p ≥ 0,05 dans le sens défavorable).
+- S5 ≤ 3 × S5(one-hot).
 
 **Références.**
 - Glos et al. 2022, [10.1038/s41534-022-00546-y](https://doi.org/10.1038/s41534-022-00546-y)
@@ -344,9 +394,13 @@ résultat compte.
    **Rapporter les scores avant et après la recherche locale.**
 6. Passer au cloud seulement pour le meilleur réglage, et noter les crédits.
 
+**Métriques principales :** E5 (`score_raw`) **et** E6 (`score_after_ls`), Q2, S3 (`max_qubits`), C3,
+C4, A1 à A3 contre la variante déquantisée, E1, E3.
+
 **Critères de succès.**
-- Gap sur network24 meilleur que B1, avant la recherche locale.
-- Meilleur que la variante déquantisée.
+- Sur `network24` : médiane de E5 < médiane de Q1 de B1, avec p < 0,05.
+- A2 < 0 et A3 < 0,05 contre la variante déquantisée (A1 = `pce_dequantized`), comparés sur E5.
+- S3 ≥ 30 qubits sur `network24` (argument d'échelle).
 
 **Références.**
 - Sciorilli et al. 2025, [10.1038/s41467-024-55346-z](https://doi.org/10.1038/s41467-024-55346-z)
@@ -386,9 +440,14 @@ gloutonne avec des coups tirés au hasard, et s'approche de B2.
    adapté aux batchs cloud.
 4. Comparer à B2 et à une ablation où le quantique est remplacé par un tirage uniforme ou glouton.
 
+**Métriques principales :** Q1 et Q2 médians, C6 et C8 (courbes à budget LP égal), A1 à A4 (ablation :
+même recherche locale avec un choix de coups uniforme ou glouton), S3, C3, C4.
+
 **Critères de succès.**
-- Meilleur que l'ablation classique.
-- Gap sur network16 à network24 plus proche de B2 que celui de B1.
+- A2 < 0 et A3 < 0,05 contre l'ablation classique, sur `network16` et `network24`.
+- Q2 médian ≤ (Q2 médian de B1 + Q2 médian de B2) / 2 sur `network16` à `network24` : au moins à
+  mi-chemin entre B1 et B2.
+- Pour la variante B : S3 rapporté, avec un objectif de S3 ≥ 20.
 
 **Références.**
 - Shaydulin et al. 2019, [10.1002/qute.201900029](https://doi.org/10.1002/qute.201900029)
@@ -423,8 +482,13 @@ structuré, le gain éventuel devra venir de la structure du substitut.
    d'optimisation, pas un échantillonneur exact.
 4. **Mesure principale :** le temps et le nombre d'appels LP pour atteindre le meilleur connu + x %.
 
-**Critères de succès.** Courbe meilleur-score / appels LP significativement meilleure que B2 avec p=0,
-sur 5 seeds.
+**Métriques principales :** C6 (`lp_calls_to_target` à eps = 0,01 et 0,001), C7, C8, Q1 et Q2 médians,
+A4 contre B2 (p = 0), C3 et C4 (budget quantique, rapporté à part).
+
+**Critères de succès.**
+- Médiane de C6 à eps = 0,01 au plus 0,8 × celle de B2 avec p = 0, sur `network12` et `network16`.
+- Médiane de Q1 à budget LP égal non pire que celle de B2 (A4 : p ≥ 0,05 dans le sens défavorable).
+- Coût quantique (C3 et C4) rapporté et jugé soutenable pour un run sur `network24`.
 
 **Références.**
 - Layden et al. 2023, [10.1038/s41586-023-06095-4](https://doi.org/10.1038/s41586-023-06095-4)
@@ -461,9 +525,12 @@ et améliore le score final du QAOA partitionné, par rapport à B3.
 4. Comparer à B3 sur `network12`, `network16` et `network24` : faisabilité avant repair, score, nombre de
    circuits.
 
+**Métriques principales :** E1 (`feasible_mass`), E4 (`repair_hamming_mean`), E5, Q1 et Q2 médians,
+S3, S4, C3. Comparaison avec B3 (`CommunityDecomposer`) à `cluster_size` et budget de circuits égaux.
+
 **Critères de succès.**
-- Faisabilité avant repair nettement plus haute que B3.
-- Meilleur score final que B3.
+- E1 ≥ 2 × E1(B3) et E4 ≤ 0,5 × E4(B3) sur `network12` et `network16`.
+- Médiane de E5 < médiane de E5 de B3 sur `network12`, `network16` et `network24`, avec p < 0,05.
 
 **Références.**
 - Zhou et al. 2023, [10.1103/PhysRevApplied.19.024027](https://doi.org/10.1103/PhysRevApplied.19.024027)
@@ -488,12 +555,14 @@ et améliore le score final du QAOA partitionné, par rapport à B3.
 
 ## Journal des résultats
 
-Pour chaque hypothèse terminée, ajouter sous sa section :
+Les résultats détaillés de chaque hypothèse vont dans `docs/network/hypothesis/<id>/result.md`, à partir
+du modèle [`hypothesis/_template/result.md`](hypothesis/_template/result.md). Le procédé suivi va dans
+`process.md` (modèle [`hypothesis/_template/process.md`](hypothesis/_template/process.md)). Ici, on ne met
+à jour que la ligne `Statut` de l'hypothèse :
 
 ```markdown
-**Résultats (YYYY-MM-DD, branche `network/hN-…`, commit `abc1234`)**
-| Instance | Méthode | Seeds | Meilleur | Médiane | Gap | Qubits max | Appels LP | Crédits |
-|---|---|---|---|---|---|---|---|---|
-Fichiers : `results/network/<timestamp>_networkNN.sol` (+ `.json`).
-Conclusion : validée / invalidée / non concluante. Suite : …
+**Statut : Validée (phase 1) — [résultats](hypothesis/h7/result.md)**. Branche : `network/h7-qls-2exchange`. …
 ```
+
+Statuts possibles : `À faire`, `En cours`, `Validée`, `Invalidée`, `Non concluante` (règles de
+`metrics.md` §5), suivis de `(phase 1)` ou `(phase 2)`.
