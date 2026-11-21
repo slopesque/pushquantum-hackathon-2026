@@ -61,8 +61,8 @@ Le jury juge deux choses : *l'échelle* (taille de l'instance, qubits du plus gr
     [P4. Recherche locale rapide + mouvements par paires], [Baseline classique], [#fait],
     [P5. Métaheuristiques (SA, tabou) en entiers], [Baseline forte], [#afaire],
     [P6. Solveur exact (SCIP) sur petites instances], [Bornes, contrôle], [#afaire],
-    [P7. LNS quantique, QUBO à signe fixé (2 bits/case)], [Part quantique], [#afaire],
-    [P8. Choix des fenêtres du LNS], [Efficacité du LNS], [#afaire],
+    [P7. LNS quantique, QUBO à signe fixé (2 bits/case)], [Part quantique], [#encours],
+    [P8. Choix des fenêtres du LNS], [Efficacité du LNS], [#encours],
     [P9. Réglage des pénalités et caractérisation], [Qualité des sous-QUBO], [#afaire],
     [P10. PCE sur de grosses fenêtres], [Échelle en qubits], [#afaire],
   ),
@@ -600,9 +600,28 @@ nombre de qubits égal (12 qubits pour 6 cases, 30 qubits pour 15 cases).
 *Comparaison honnête :* même LNS, mêmes fenêtres, avec comme sous-solveur une énumération exacte (petites
 fenêtres) ou un recuit simulé. Le quantique n'a d'intérêt démontré que s'il fait au moins aussi bien.
 
+#keybox(title: "État (implémenté, détaillé dans lns.typ)")[
+  - *La boucle LNS est en place* (`src/hackathon/solvers/portfolio/lns.py`), avec quatre sous-solveurs sur le
+    même QUBO : énumération, recuit simulé, QAOA et PCE (Divi). Le QUBO est vérifié exact sur toutes les
+    solutions faisables dès que les écarts de quantité sont d'au plus 1.
+  - *Le LNS classique marche très bien* avec des fenêtres *pleine largeur* (toutes les actions sur 1 ou 2
+    jours) : sur le jeu `hard`, il divise le gap par 4 à 10 (par exemple 27,9 % → 2,7 % sur a050_t10_s01,
+    $lambda = 10^(-3)$) et retrouve le meilleur connu sur a010 à $lambda = 10^(-3)$.
+  - *Le quantique ne fait pas encore mieux que le recuit simulé à fenêtres égales* : PCE (200 bits sur 20
+    qubits) trouve une amélioration dans 3 fenêtres sur 12 contre 8 sur 12, et il est 18 fois plus lent. La
+    suite de P7 consiste à le rendre utile : budget, démarrage à chaud, parallélisme dans le cloud.
+]
+
 == P8. Choix des fenêtres
 
-La qualité du LNS dépend des fenêtres :
+#keybox(title: "Premier résultat (voir lns.typ)")[
+  Les petites fenêtres (3 actions × 3 jours) sont *épuisées* par la recherche locale : une énumération exacte
+  sur 60 fenêtres ne trouve aucune amélioration. Les écarts avec les meilleures solutions connues touchent
+  *beaucoup d'actions sur peu de jours*, sans changement de signe. D'où la stratégie `wide` : toutes les
+  actions (au plus 50) sur 1 ou 2 jours, tirés au hasard.
+]
+
+La qualité du LNS dépend des fenêtres. Idées restantes :
 - *actions corrélées $times$ jours consécutifs*, pour trouver les paires couvertes quand $lambda$ est grand ;
 - *cases « tendues »*, là où le budget ou le capital sont saturés ;
 - *rotation aléatoire*, pour la diversité ;
