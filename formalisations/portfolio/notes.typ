@@ -19,6 +19,28 @@
 
 #show heading: set text(fill: accent)
 
+= 21 novembre 2026 (soir) : le LNS marche, le quantique pas encore
+
+*Constat.* Avec des fenêtres pleine largeur (toutes les actions sur 1 ou 2 jours), le LNS avec recuit simulé
+divise le gap par 4 à 10 sur les cas difficiles. Avec QAOA ou PCE comme sous-solveur, à fenêtres identiques,
+on ne fait presque jamais mieux que la recherche locale de départ (seule exception : PCE sur a010,
+$lambda = 10^(-3)$, de 4,86 % à 0,60 %, là où le recuit atteint 0 %). Détails : `lns.typ`.
+
+#warnbox(title: "À ne pas surinterpréter")[
+  - Les bons résultats du LNS sont *classiques* (`lns-sa`). Les présenter comme quantiques serait faux.
+  - Une seule seed par cas : les écarts entre méthodes proches (moins de 0,5 point) ne sont pas significatifs.
+  - PCE dépasse la limite de temps (le temps n'est vérifié qu'entre deux fenêtres) : jusqu'à 108 s pour 60 s.
+]
+
+*Ce qu'on a appris en route.*
+- La forme de la fenêtre compte bien plus que le sous-solveur : petites fenêtres = aucun gain, quel que soit
+  le solveur, même exact.
+- Divi lit les bits dans l'ordre interne du BQM dimod (pas forcément $0, 1, 2, dots$) et, pour PCE,
+  `bitstring` n'est pas la solution (il faut `decoded`). On construit les BQM avec `from_numpy_vectors` et on
+  recalcule toujours les énergies nous-mêmes.
+- Un état intermédiaire (fenêtre à zéro) peut être infaisable : les intérêts n'y sont plus linéaires. Le test
+  d'exactitude du QUBO l'a révélé ; le décalage est maintenant calculé avec des intérêts linéaires.
+
 = 21 novembre 2026 : les solutions a400 sont valides et rapides, pas forcément bonnes
 
 *Contexte.* La recherche locale `ls-full-b20` produit en moins de 10 s une solution pour chacune des 8 valeurs
