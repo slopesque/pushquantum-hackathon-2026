@@ -13,3 +13,7 @@ __pycache__/
 
 # Our runs are kept: .sol + .json metadata under results/
 !results/**/*.sol
+
+# Typst
+*.pdf
+formalisations/out/

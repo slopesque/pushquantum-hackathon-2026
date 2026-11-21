@@ -95,6 +95,12 @@ pushquantum-hackathon-2026/
 ├── results/                 # Sorties des runs, COMMITÉES
 │   ├── portfolio/                   # <timestamp>_<nom officiel>.sol + .json de métadonnées
 │   └── network/
+├── formalisations/          # Documents Typst (PDF), même setup que nos autres projets
+│   ├── justfile                     # `just portfolio`, `just all`, `just preview <fichier>`, `just clean`
+│   ├── template_article/            # Template d'article (ne pas modifier sans raison)
+│   ├── _commun.typ                  # Boîtes partagées : keybox, enbref, warnbox
+│   └── .base/base.typ               # Squelette à copier pour un nouveau document
+│                                    #   PDF générés dans formalisations/out/ (ignoré par git)
 ├── tests/                   # pytest : l'arbitre reproduit les références, nos .sol sont valides
 ├── .env.example             # Modèle pour .env (QORO_API_KEY)
 ├── pyproject.toml / uv.lock # Dépendances (uv), Python 3.12
