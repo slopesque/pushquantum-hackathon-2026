@@ -7,6 +7,7 @@ qoblib_data/
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+__marimo__/
 
 # Virtual environments
 .venv/

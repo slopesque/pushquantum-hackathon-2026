@@ -83,6 +83,8 @@ pushquantum-hackathon-2026/
 │   ├── 02_network_design.ipynb
 │   ├── qoblib_tools.py              # L'ARBITRE : chargeurs, scoreurs officiels, QUBO builders, écriture .sol
 │   └── README.md                    # Règles du hackathon (scoring, formats .sol)
+├── docs/                    # Documentation de travail (humains + agents)
+│   └── network/                     # state-of-the-art.md (revue de littérature), hypothesis.md (H0…H9)
 ├── src/hackathon/           # Notre code réutilisable, installé en mode éditable par `uv sync`
 │   ├── referee.py                   # `from hackathon.referee import qt` : importe l'arbitre sans le copier
 │   ├── utils.py                     # .env, make_backend(), gap(), save_run(), git_hash()
@@ -144,6 +146,18 @@ uv run jupyter lab               # ou jupyter
 Les `SyntaxWarning` levés à l'import par des dépendances D-Wave (`plucky`, `homebase`…) sont sans
 conséquence.
 
+### Lire des PDF (papiers, docs)
+
+Pour lire un PDF (article arXiv, documentation…), **préférer `markitdown`** (dépendance de dev
+`markitdown[pdf]`) à une lecture directe du PDF : le Markdown produit coûte bien moins de tokens.
+
+```bash
+uv run markitdown papier.pdf -o /tmp/papier.md   # puis lire /tmp/papier.md (par morceaux si long)
+curl -sL https://arxiv.org/pdf/2401.09421 -o /tmp/p.pdf && uv run markitdown /tmp/p.pdf > /tmp/p.md
+```
+
+Ne pas commiter les PDF ni leurs conversions (les garder dans `/tmp`).
+
 ## 4. Git
 
 ### Branches
@@ -164,3 +178,63 @@ conséquence.
   GPG (`-S`). Le commit est écrit au nom de l'auteur git configuré, sans rien ajouter.
 - Commiter les `.sol` et `.json` de `results/` qui méritent d'être gardés, en particulier ceux qu'on
   compte rendre.
+
+## 5. Network (problème 08)
+
+> Section à mettre à jour au fur et à mesure que les hypothèses de `docs/network/hypothesis.md` sont
+> expérimentées (statut, résultats, conclusions).
+
+### Mission
+
+Trouver, pour la **plus grosse instance possible** (`network24`, 552 variables, meilleur connu
+**663 688**), une topologie 2-in/2-out dont le score LP (`qt.route_min_congestion`) est **au plus près du
+meilleur connu, ou meilleur**, avec une **contribution quantique démontrée** (ablation contre un
+équivalent classique) et un **programme quantique aussi gros que possible** (qubits). Chaque résultat
+rendable est un `network<NN>.sol` validé par `qt.check_network_solution` et enregistré par `save_run`.
+
+### Ce qu'il faut savoir avant de commencer
+
+- Le problème se sépare en **topologie** (combinatoire : QUBO, n(n−1) variables) et **routage** (LP exact,
+  quelques ms, c'est l'arbitre). Le QUBO du kit (`qt.build_network_qubo`) n'est qu'un **substitut**
+  (`−Σ t_ij x_ij`) : l'améliorer est une grande partie du défi.
+- Une topologie valide = deux permutations sans point fixe qui ne coïncident jamais ; l'échange
+  `(a→b),(c→d) ⇒ (a→d),(c→b)` préserve les degrés.
+- **Barre à battre** : les meilleurs connus de `network11` à `network23` viennent d'un *parallel tempering*
+  classique sur ces 2-/3-exchanges avec le LP comme énergie (soumission QOBLIB de Gupta, détaillée dans
+  `docs/network/state-of-the-art.md` §0). Optima prouvés jusqu'à `network10`.
+- Divi 0.16.2 fournit déjà : `LinearConstraint`, `PartitioningProgramEnsemble`, `PCE` (`PolyEncoding`,
+  `DenseEncoding`), HUBO dans `BinaryOptimizationProblem`, `xy_mixer`, `WState`, `InitialState`
+  dérivable, `QAOA.mixer_hamiltonian` réassignable.
+
+### Documents de travail
+
+- `docs/network/state-of-the-art.md` : revue de littérature (DOI, auteurs, résultats) — **ne pas refaire
+  la recherche**, la compléter si besoin.
+- `docs/network/hypothesis.md` : hypothèses **H0 à H9**, indépendantes, avec protocole commun
+  (instances, seeds 0–4, métriques, baselines B0–B3), critères de succès et papiers de référence.
+
+### Comment travailler
+
+1. Commencer par **H0** (socle : scorer avec cache et duales, 2-exchanges, baselines B0–B3, harnais de
+   benchmark) si ce n'est pas déjà fait — branche `network/baseline`, module
+   `src/hackathon/solvers/network.py`.
+2. Prendre **une** hypothèse `À faire`, sur la branche `network/h<N>-<slug>`, code dans
+   `src/hackathon/solvers/network_h<N>.py`, scripts dans `scripts/network_h<N>_*.py`.
+3. Mettre au point en local (Maestro), cloud seulement pour un pipeline validé ; noter les crédits.
+4. Rapporter dans `docs/network/hypothesis.md` (statut + tableau de résultats + conclusion), et mettre à
+   jour cette section si une hypothèse change la stratégie globale.
+
+### État des hypothèses
+
+| Hypothèse | Statut | Meilleur résultat |
+|---|---|---|
+| H0 socle & baselines | À faire | — |
+| H1 substitut appris (FMQA/BOX-QUBO) | À faire | — |
+| H2 substitut enrichi + réglage λ | À faire | — |
+| H3 rétroaction duales LP | À faire | — |
+| H4 Dicke par ligne + mixer XY | À faire | — |
+| H5 encodage compact des permutations | À faire | — |
+| H6 PCE à l'échelle network24 | À faire | — |
+| H7 Quantum Local Search 2-exchange | À faire | — |
+| H8 propositions quantiques dans le PT | À faire | — |
+| H9 partitionnement structuré + warm start | À faire | — |
