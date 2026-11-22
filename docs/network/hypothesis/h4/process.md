@@ -72,3 +72,8 @@ Papiers suivis : Hadfield 2019, Wang 2020 (mixers XY), Bärtschi 2019 (Dicke), O
   de plus de 24 qubits lève une erreur.
 - 2026-11-22 : les BQM de coût sont normalisés avant QAOA (comme le PCE de H1), pour que les angles du
   MonteCarloOptimizer aient la même échelle dans les deux méthodes.
+- 2026-11-22 : les 6 runs d'évaluation network05 (3 seeds × 2 méthodes) ont tourné sur le cloud Qoro
+  (statevector, 20 qubits) pour décharger le CPU local, après validation locale de la seed 0. Plafond de
+  temps relevé (`--time-limit 1800`) : le plafond de 2 min de network05 compte la simulation QAOA.
+- 2026-11-22 : contrôle de sensibilité λ = 3 (seed 0, local, non enregistré dans les JSONL, log dans
+  `results/network/bench/h4/sensitivity_lam3_network05_seed0.log`).

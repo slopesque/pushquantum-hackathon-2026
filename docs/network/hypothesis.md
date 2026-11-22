@@ -212,7 +212,7 @@ paramétrable) : à faire sans changer le comportement par défaut de H1, et à 
 
 ## H4 · Faisable par construction : état de Dicke par ligne et mixer XY
 
-**Statut : À faire**. Branche : `network/h4-dicke-xy`. Code : `src/network-experiments/h4/`.
+**Statut : Invalidée — [résultats](hypothesis/h4/result.md)**. Branche : `network/h4-dicke-xy`. Code : `src/network-experiments/h4/`.
 Part de la branche H2 (commit de documentation).
 
 **Idée.** Les variables `x_ij` d'une ligne i forment un bloc de n−1 qubits qui doit contenir exactement
