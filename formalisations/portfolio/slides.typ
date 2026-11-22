@@ -267,3 +267,6 @@
   )
   #text(size: 11pt, fill: grey)[17 `.sol` files (8 × a400, 9 × LNS hard set), all re-scored by the official QOBLIB checker; method, parameters, seed and git hash stored with each run.]
 ]
+
+// ───────────────────────────────── Network design (QOBLIB 08), ~2 min 30 s
+#include "/network/report/_network.typ"
