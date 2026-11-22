@@ -1,0 +1,138 @@
+{
+  "hypothesis": "h1",
+  "method": "h1_sa_fm",
+  "instance": "network24",
+  "seed": 0,
+  "params": {
+    "rank": 8,
+    "lam": 1.0,
+    "beta": 0.5,
+    "target": "rank",
+    "n0_frac": 0.2,
+    "sa_reads": 100,
+    "epochs_init": 300,
+    "epochs_round": 50,
+    "lr": 0.003,
+    "l2": 0.01,
+    "quantum": null,
+    "quantum_rounds": "none",
+    "diag_instance": "network24"
+  },
+  "budget": {
+    "lp_calls": 10000,
+    "time_s": 5400.0
+  },
+  "score": 731261,
+  "best_known": 663688,
+  "gap": 0.10181440676944588,
+  "lp_calls": 10000,
+  "wall_time_s": 1958.52,
+  "n_circuits": 0,
+  "backend": "none",
+  "n_vars": 552,
+  "max_qubits": 0,
+  "feasible_mass": 0.9057499999999999,
+  "score_raw": null,
+  "score_after_ls": null,
+  "spearman_rho": null,
+  "top10_precision": null,
+  "spearman_rho_init": null,
+  "top10_precision_init": null,
+  "spearman_rho_kit": null,
+  "top10_precision_kit": null,
+  "n_rounds": 80,
+  "n_quantum_rounds": 0,
+  "n_explore": 0,
+  "score_after_n0": 796902.0,
+  "trajectory": [
+    [
+      1,
+      993500.0
+    ],
+    [
+      2,
+      954334.0
+    ],
+    [
+      3,
+      942847.0
+    ],
+    [
+      5,
+      891834.0
+    ],
+    [
+      8,
+      888962.0
+    ],
+    [
+      18,
+      865934.0
+    ],
+    [
+      39,
+      843000.0
+    ],
+    [
+      93,
+      812118.0
+    ],
+    [
+      96,
+      806988.0
+    ],
+    [
+      1423,
+      796902.0
+    ],
+    [
+      2333,
+      792000.0
+    ],
+    [
+      2954,
+      788682.0
+    ],
+    [
+      2955,
+      788356.0
+    ],
+    [
+      3480,
+      769000.0
+    ],
+    [
+      3603,
+      766277.0
+    ],
+    [
+      5316,
+      761736.0
+    ],
+    [
+      5857,
+      759048.0
+    ],
+    [
+      6027,
+      750364.0
+    ],
+    [
+      8505,
+      746640.0
+    ],
+    [
+      9118,
+      743369.0
+    ],
+    [
+      9809,
+      731261.0
+    ]
+  ],
+  "fit_time_s": 189.325,
+  "sample_time_s": 872.157,
+  "git": "0a2d2c9-dirty",
+  "timestamp": "20261122T015004Z",
+  "sol_file": "20261122T015004Z_network24.sol"
+}

@@ -66,7 +66,7 @@ de H1.
 
 ## H1 · Substitut QUBO appris à partir de l'oracle LP (FMQA / BOX-QUBO)
 
-**Statut : À faire**. Branche : `network/h1-learned-surrogate`. Code : `src/network-experiments/h1/`.
+**Statut : Validée — [résultats](hypothesis/h1/result.md)**. Branche : `network/h1-learned-surrogate`. Code : `src/network-experiments/h1/`.
 Dépend de H0.
 
 **Idée.** Le substitut du kit (`−Σ t_ij x_ij`) ignore le routage sur plusieurs sauts. Le LP coûte
