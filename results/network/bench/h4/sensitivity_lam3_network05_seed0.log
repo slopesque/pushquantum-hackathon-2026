@@ -1,0 +1,3 @@
+# Sensibilité λ=3, network05 seed 0, --no-write, local
+h4_qaoa_dicke network05 seed=0 score=69334 best_known=65500 gap=+5.85% lp=60 t=95.65s circuits=201 qubits=20 E1=0.1072 outdeg=1.0000 p_opt=0.0007 rank_best=1 sweeps=None
+h4_qaoa_penalty network05 seed=0 score=69334 best_known=65500 gap=+5.85% lp=97 t=107.09s circuits=201 qubits=20 E1=0.0803 outdeg=0.1845 p_opt=0.0004 rank_best=1 sweeps=None
