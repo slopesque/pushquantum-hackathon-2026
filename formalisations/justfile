@@ -34,6 +34,8 @@ preview file:
 
 portfolio: (build "portfolio")
 
+network-report: (build "network/report")
+
 all:
     #!/usr/bin/env bash
     set -euo pipefail
