@@ -4,19 +4,13 @@
 // docs/network/hypothesis/*/result.md on branch network/main.
 #import "_theme.typ": *
 
-// ───────────────────────────────── 0. Section page (~5 s)
-#page(margin: 0pt, fill: accent)[
-  #set text(fill: white)
-  #pad(x: 2cm, top: 4.5cm)[
-    #text(size: 15pt, fill: accent2.lighten(50%), weight: "bold")[QOBLIB 08 · Network design]
-    #v(0.3cm)
-    #text(size: 38pt, weight: "bold")[Teaching the QUBO \ what routing costs]
-    #v(0.5cm)
-    #text(size: 17pt)[Physics-informed and learned surrogates, with PCE and constrained QAOA in Divi]
-    #v(1.6cm)
-    #text(size: 14pt)[Clément Metz · Leith Chakroun · Ugo Col · Alexandre Baconnet · EPITA Quantum]
-  ]
-]
+// ───────────────────────────────── Part 2 divider (~3 s)
+#part-slide(
+  "2",
+  "QOBLIB 08 · Network design",
+  [Teaching the QUBO \ what routing costs],
+  [Physics-informed and learned surrogates, with PCE and constrained QAOA in Divi],
+)
 
 // ───────────────────────────────── 1. Problem (~35 s)
 // Choose 2 out-links and 2 in-links per node, then route all the demand; the score is the load of the

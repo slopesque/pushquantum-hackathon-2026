@@ -63,19 +63,47 @@
 
 #let hdr(..cells) = cells.pos().map(c => table.cell(fill: accent, c))
 
-// ───────────────────────────────── 0. Title (~10 s)
+// Part divider, shared with the network part (copy in network/report/_theme.typ: keep in sync).
+#let part-slide(num, kicker, title, subtitle) = page(margin: 0pt, fill: accent)[
+  #set text(fill: white)
+  #pad(x: 2cm, top: 4.2cm)[
+    #text(size: 14pt, fill: accent2.lighten(50%), weight: "bold", tracking: 1pt)[PART #num OF 2 · #kicker]
+    #v(0.3cm)
+    #text(size: 36pt, weight: "bold", title)
+    #v(0.5cm)
+    #text(size: 17pt, subtitle)
+  ]
+]
+
+// ───────────────────────────────── 0. Deck title, both parts (~10 s)
 #page(margin: 0pt, fill: accent)[
   #set text(fill: white)
-  #pad(x: 2cm, top: 4.5cm)[
-    #text(size: 15pt, fill: accent2.lighten(50%), weight: "bold")[QOBLIB 06 · Multi-period portfolio optimisation]
+  #pad(x: 2cm, top: 3.6cm)[
+    #text(size: 15pt, fill: accent2.lighten(50%), weight: "bold")[Qoro × PushQuantum Hackathon 2026 · QOBLIB with Divi]
     #v(0.3cm)
-    #text(size: 38pt, weight: "bold")[Structure-guided partitioning \ for portfolio QUBOs]
-    #v(0.5cm)
-    #text(size: 17pt)[Exact window QUBOs, a large-neighbourhood search, and QAOA / PCE sub-programs with Divi]
-    #v(1.6cm)
+    #text(size: 38pt, weight: "bold")[Two QOBLIB benchmarks: \ get the model right first]
+    #v(0.6cm)
+    #set text(size: 17pt)
+    #grid(
+      columns: (auto, 1fr),
+      align: left,
+      column-gutter: 0.5cm,
+      row-gutter: 0.35cm,
+      text(fill: accent2.lighten(50%), weight: "bold")[1], [#text(weight: "bold")[Portfolio optimisation] (QOBLIB 06) · structure-guided partitioning],
+      text(fill: accent2.lighten(50%), weight: "bold")[2], [#text(weight: "bold")[Network design] (QOBLIB 08) · teaching the QUBO what routing costs],
+    )
+    #v(1.2cm)
     #text(size: 14pt)[Clément Metz · Leith Chakroun · Ugo Col · Alexandre Baconnet · EPITA Quantum]
   ]
 ]
+
+// ───────────────────────────────── Part 1: portfolio (~3 s)
+#part-slide(
+  "1",
+  "QOBLIB 06 · Multi-period portfolio optimisation",
+  [Structure-guided partitioning \ for portfolio QUBOs],
+  [Exact window QUBOs, a large-neighbourhood search, and QAOA / PCE sub-programs with Divi],
+)
 
 // ───────────────────────────────── 1. Problem + reformulation (~40 s)
 #slide[Largest instance, no published result: reformulate first][
@@ -268,5 +296,5 @@
   #text(size: 11pt, fill: grey)[17 `.sol` files (8 × a400, 9 × LNS hard set), all re-scored by the official QOBLIB checker; method, parameters, seed and git hash stored with each run.]
 ]
 
-// ───────────────────────────────── Network design (QOBLIB 08), ~2 min 30 s
+// ───────────────────────────────── Part 2: network design (QOBLIB 08), ~2 min 30 s
 #include "/network/report/_network.typ"

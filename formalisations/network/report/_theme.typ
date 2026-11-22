@@ -66,6 +66,18 @@
   text(size: 13pt, fill: grey, label),
 ))
 
+// Part divider (copy of portfolio/slides.typ: keep in sync).
+#let part-slide(num, kicker, title, subtitle) = page(margin: 0pt, fill: accent)[
+  #set text(fill: white)
+  #pad(x: 2cm, top: 4.2cm)[
+    #text(size: 14pt, fill: accent2.lighten(50%), weight: "bold", tracking: 1pt)[PART #num OF 2 · #kicker]
+    #v(0.3cm)
+    #text(size: 36pt, weight: "bold", title)
+    #v(0.5cm)
+    #text(size: 17pt, subtitle)
+  ]
+]
+
 #let hdr(..cells) = cells.pos().map(c => table.cell(fill: accent, c))
 
 // Box of a "step → step" chain.
