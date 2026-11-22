@@ -1,0 +1,8 @@
+# Réglage H2 sur network12, seed 0, --no-write (B1 seed 0 = 298 858 ; F1/F2/F3 : python -m h2.tune --grid)
+CFG --beta2 1 --lam 1.3 => h2_sa_phys network12 seed=0 score=295273 best_known=276474 gap=+6.80% lp=5000 t=206.86s lam=1.3 E1=0.322 rho=—
+CFG --beta2 1 --lam 2 => h2_sa_phys network12 seed=0 score=299858 best_known=276474 gap=+8.46% lp=5000 t=175.2s lam=2.0 E1=0.894 rho=—
+CFG --beta2 0.5 --gamma 0.5 --lam 1.3 => h2_sa_phys network12 seed=0 score=302400 best_known=276474 gap=+9.38% lp=5000 t=168.84s lam=1.3 E1=0.992 rho=—
+CFG --beta2 0.5 --gamma 0.5 --lam 2 => h2_sa_phys network12 seed=0 score=308000 best_known=276474 gap=+11.40% lp=5000 t=162.57s lam=2.0 E1=1.000 rho=—
+CFG --beta2 1 --lam 1 => h2_sa_phys network12 seed=0 score=293500 best_known=276474 gap=+6.16% lp=5000 t=155.71s lam=1.0 E1=0.000 rho=—
+CFG --beta2 0.5 --lam 1.3 => h2_sa_phys network12 seed=0 score=294462 best_known=276474 gap=+6.51% lp=5000 t=114.65s lam=1.3 E1=0.938 rho=—
+CFG --beta2 1 --lam 1.15 => h2_sa_phys network12 seed=0 score=294800 best_known=276474 gap=+6.63% lp=5000 t=149.81s lam=1.15 E1=0.091 rho=—

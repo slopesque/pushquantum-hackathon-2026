@@ -155,7 +155,7 @@ max et la comparaison à B1 et à l'ablation.
 
 ## H2 · Substitut analytique enrichi (chemins à 2 sauts) et réglage de λ
 
-**Statut : À faire**. Branche : `network/h2-physics-surrogate`. Code : `src/network-experiments/h2/`.
+**Statut : Validée — [résultats](hypothesis/h2/result.md)**. Branche : `network/h2-physics-surrogate`. Code : `src/network-experiments/h2/`.
 Part de la branche H1.
 
 **Idée.** Sans apprentissage, rendre le substitut du kit plus fidèle au routage. Le score est la charge
