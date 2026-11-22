@@ -27,7 +27,9 @@ def load_records(hypotheses: Iterable[str]) -> list[dict[str, Any]]:
     records = []
     for hyp in hypotheses:
         for path in sorted((harness.BENCH_DIR / hyp).glob("*.jsonl")):
-            records += [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
+            rows = [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
+            # Les lignes hors schéma de run (sondes cloud, diagnostics) n'ont pas de ``lp_calls``.
+            records += [r for r in rows if "lp_calls" in r and "score" in r]
     return records
 
 
