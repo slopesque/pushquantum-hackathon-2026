@@ -71,3 +71,6 @@ suivis : Kitai 2020 (FMQA), Sciorilli 2025 (PCE).
 - **2026-11-21 · PCE sur network24.** Cloud Qoro, `PolyEncoding` (33 qubits), simulation MPS de Maestro
   (`max_bond_dimension` = 32), `quantum_rounds = every:10` (au lieu de every:5 sur network12) pour tenir le
   plafond de 30 min. Sonde préalable : `h1.cloud_probe`.
+- **2026-11-22 · Finition network24 à 10 000 LP.** `--time-limit 5400` au lieu du plafond de 30 min de la
+  tranche D, et `OMP_NUM_THREADS=1`, pour que le budget LP soit la seule limite (B1 l'atteint en 25 min,
+  H1 a besoin d'≈ 33 min). La relance `h1_pce_fm` a été annulée (règle des +10 min) et reste à refaire.

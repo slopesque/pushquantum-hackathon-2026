@@ -7,8 +7,9 @@
   (le hash `5d242b6` des JSONL est le même commit avant le rebase sur H0 ; le suffixe `-dirty` ne vient
   que de `process.md`, modifié pendant les runs).
 - **Date :** 2026-11-21
-- **Conclusion :** **Validée** sur network12 (critère principal). Sur network24, sous le plafond de
-  30 min, H1 ne bat pas B1 : la boucle est plus lente par LP et n'atteint pas le budget de 10 000 LP.
+- **Conclusion :** **Validée** sur network12 (critère principal) **et sur network24 à budget LP égal**
+  (10 000 LP, finition du 2026-11-22) : médiane 737 450 (+11,11 %) contre 744 980 (+12,25 %) pour B1, 3 seeds
+  sur 3 sous B1. Sous le plafond de 30 min, en revanche, H1 n'atteignait que ≈ 7 900 LP et ne battait pas B1.
 
 ## 1. Résumé
 
@@ -34,7 +35,8 @@ itérations, top 100 par énergie, un tour sur 5 (network12) ou sur 10 (network2
 | network12 | h1_pce_fm | 289 000 (+4,53 %) | 289 400 (+4,68 %) | 291 800 | 5 000 | 268 | 16 | maestro_local |
 | network24 | b0_random | 781 448 (+17,74 %) | 788 125 (+18,75 %) | 793 534 | 10 000 | 1 369 | 0 | none |
 | network24 | b1_sa_kit | 735 228 (+10,78 %) | 744 980 (+12,25 %) | 749 821 | 10 000 | 1 486 | 0 | none |
-| network24 | h1_sa_fm | 741 450 (+11,72 %) | 749 667 (+12,95 %) | 750 364 | 7 916 | 1 800 | 0 | none |
+| network24 | h1_sa_fm (plafond 30 min) | 741 450 (+11,72 %) | 749 667 (+12,95 %) | 750 364 | 7 916 | 1 800 | 0 | none |
+| network24 | **h1_sa_fm (10 000 LP)** | **731 261 (+10,18 %)** | **737 450 (+11,11 %)** | 740 667 | 10 000 | 1 958 | 0 | none |
 | network24 | h1_pce_fm | **731 660 (+10,24 %)** | 747 595 (+12,64 %) | 756 726 | 5 000 | 1 930 | **33** | qoro_cloud |
 
 Par seed (0 / 1 / 2) :
@@ -60,6 +62,18 @@ Métriques spécifiques :
   FM seule (β = 0) : 294 667 ; β = 0,25 / 0,5 / 1 / 2 : 283 400 / 285 625 / 287 067 / 287 308 ; λ = 2 :
   304 400 ; cible z-score : 298 143.
 
+### Finition network24 à 10 000 LP (2026-11-22)
+
+Relance de `h1_sa_fm` avec `--time-limit 5400` et `OMP_NUM_THREADS=1`, pour que le budget LP (10 000) soit
+la seule limite, comme pour B1. Les 3 runs atteignent 10 000 LP en ≈ 33 min. Trajectoires (meilleur
+score à 5 000 / 7 900 / 10 000 LP) : seed 0 = 766 277 / 750 364 / 731 261 ; seed 1 = 766 000 / 749 667 /
+740 667 ; seed 2 = 763 567 / 741 450 / 737 450. Les valeurs à 7 900 LP sont **identiques** à celles des runs
+plafonnés à 30 min : `h1_sa_fm` est déterministe à seed donnée, quelle que soit la charge machine.
+
+La relance de `h1_pce_fm` à 10 000 LP a été **annulée** après 63 min (règle des +10 min sur la durée
+prévue) : la file d'attente du cloud, partagée avec H4, l'a ralentie. Elle reste à refaire ; le tableau
+garde donc `h1_pce_fm` à 5 000 LP.
+
 ### Consolidation network24 : runs écartés
 
 Le premier lot de runs network24 (12 processus en parallèle, 18 threads BLAS chacun, charge ≈ 18 sur
@@ -78,15 +92,16 @@ pas été relancé. Même dans le second lot, H1 bute sur le plafond de temps.
 | Bonus quantique : médiane E5(h1_pce_fm) < médiane E5(h1_sa_fm), même règle | 289 400 > 284 313 | ❌ |
 | *Ablation de β* : le gain ne vient pas du seul a priori du kit | b1_sa_kit_p2 = 310 750, pire que B1 | ✅ |
 
-Sur network24 (consolidation, à titre d'information) : h1_sa_fm (médiane 749 667) ne bat pas B1
-(744 980). h1_pce_fm a une médiane (747 595) inférieure à h1_sa_fm, avec 2 seeds sur 3 sous sa médiane,
+Sur network24 à 10 000 LP : **h1_sa_fm (médiane 737 450) bat B1 (744 980)**, 3 seeds sur 3 sous la médiane
+de B1 (règle de gain ✅). Sous le plafond de 30 min (≈ 7 900 LP), il ne le battait pas (749 667). h1_pce_fm a une médiane (747 595) inférieure à h1_sa_fm, avec 2 seeds sur 3 sous sa médiane,
 mais avec moins de LP (5 000 contre 7 900) et sans battre B1 : signal non concluant.
 
 ## 4. Solution rendue
 
 | Instance | Score | Gap | Qubits max | `.sol` | Méthode et seed |
 |---|---|---|---|---|---|
-| **network24** | **731 660** | **+10,24 %** | **33** | `results/network/20261121T232032Z_network24.sol` | h1_pce_fm, seed 1 : boucle FM (β = 0,5) + PCE cloud Qoro (PolyEncoding, MPS χ = 32), `every:10` |
+| **network24** | **731 261** | **+10,18 %** | 0 | `results/network/20261122T015004Z_network24.sol` | h1_sa_fm, seed 0, 10 000 LP (`--time-limit 5400`) |
+| network24 (quantique) | 731 660 | +10,24 % | **33** | `results/network/20261121T232032Z_network24.sol` | h1_pce_fm, seed 1 : boucle FM (β = 0,5) + PCE cloud Qoro (PolyEncoding, MPS χ = 32), `every:10`, 5 000 LP |
 | network12 | 283 900 | +2,69 % | 0 | `results/network/20261121T232033Z_network12.sol` | h1_sa_fm, seed 1 |
 
 Les deux fichiers sont validés par `qt.check_network_solution` (score égal à Q1) avant `save_run`.
@@ -107,7 +122,7 @@ atteint, et donc le score, peuvent varier.
 - **Le substitut appris aide nettement sur network12** : −6,5 points de gap par rapport à B1. L'a priori du
   kit (β) compte : la FM seule fait +6,6 % (seed 0), contre +3,3 % avec β = 0,5. Mais l'a priori seul
   (b1_sa_kit_p2) fait pire que B1 : c'est la combinaison qui marche.
-- **Sur network24, le coût par LP limite H1.** Le QUBO appris est dense (152 000 couplages, contre
+- **Sur network24, le coût par LP limite H1 dans le temps, pas en qualité** : à 10 000 LP, H1 bat B1. Le QUBO appris est dense (152 000 couplages, contre
   ≈ 12 000 pour le kit) : un tour SA prend environ 4 s, et le réentraînement grandit avec les données. Sous
   le plafond de 30 min, H1 n'utilise que 7 900 LP sur 10 000. Pistes : moins de lectures SA par tour, FM
   creuse ou de rang 4, plafond de temps relevé, ou réentraînement moins fréquent.
