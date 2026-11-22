@@ -1,0 +1,147 @@
+{
+  "hypothesis": "h2",
+  "method": "h2_fm_phys",
+  "instance": "network24",
+  "seed": 0,
+  "params": {
+    "alpha": 1.0,
+    "beta2": 1.0,
+    "gamma": 0.0,
+    "rank": 8,
+    "lam": 1.0,
+    "beta": 0.5,
+    "target": "rank",
+    "n0_frac": 0.2,
+    "sa_reads": 100,
+    "epochs_init": 300,
+    "epochs_round": 50,
+    "lr": 0.003,
+    "l2": 0.01,
+    "diag_instance": "network24"
+  },
+  "budget": {
+    "lp_calls": 10000,
+    "time_s": 5400.0
+  },
+  "score": 722459,
+  "best_known": 663688,
+  "gap": 0.08855215101071588,
+  "lp_calls": 10000,
+  "wall_time_s": 1940.13,
+  "n_circuits": 0,
+  "backend": "none",
+  "n_vars": 552,
+  "max_qubits": 0,
+  "feasible_mass": 0.179,
+  "score_raw": null,
+  "score_after_ls": null,
+  "spearman_rho": null,
+  "top10_precision": null,
+  "spearman_rho_init": null,
+  "top10_precision_init": null,
+  "spearman_rho_kit": null,
+  "top10_precision_kit": null,
+  "n_rounds": 80,
+  "n_quantum_rounds": 0,
+  "n_explore": 0,
+  "score_after_n0": 796902.0,
+  "trajectory": [
+    [
+      1,
+      993500.0
+    ],
+    [
+      2,
+      954334.0
+    ],
+    [
+      3,
+      942847.0
+    ],
+    [
+      5,
+      891834.0
+    ],
+    [
+      8,
+      888962.0
+    ],
+    [
+      18,
+      865934.0
+    ],
+    [
+      39,
+      843000.0
+    ],
+    [
+      93,
+      812118.0
+    ],
+    [
+      96,
+      806988.0
+    ],
+    [
+      1423,
+      796902.0
+    ],
+    [
+      2002,
+      784578.0
+    ],
+    [
+      2015,
+      768574.0
+    ],
+    [
+      2170,
+      767840.0
+    ],
+    [
+      2472,
+      766048.0
+    ],
+    [
+      3009,
+      762352.0
+    ],
+    [
+      3402,
+      755522.0
+    ],
+    [
+      3545,
+      755250.0
+    ],
+    [
+      3579,
+      749508.0
+    ],
+    [
+      5082,
+      748480.0
+    ],
+    [
+      6334,
+      746600.0
+    ],
+    [
+      6942,
+      744163.0
+    ],
+    [
+      7103,
+      737942.0
+    ],
+    [
+      7150,
+      722459.0
+    ]
+  ],
+  "fit_time_s": 165.394,
+  "sample_time_s": 849.763,
+  "git": "e718c4f-dirty",
+  "timestamp": "20261122T020927Z",
+  "sol_file": "20261122T020927Z_network24.sol"
+}

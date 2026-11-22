@@ -70,12 +70,19 @@ def h1_fm(
     quantum: dict[str, Any] | None = None,
     quantum_rounds: str = "none",
     diag_instance: str | None = None,
+    prior: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Boucle FMQA. Toutes les notations LP passent par ``scorer`` (budget commun)."""
+    """Boucle FMQA. Toutes les notations LP passent par ``scorer`` (budget commun).
+
+    ``prior`` (crochet H2, JSON-sérialisable) : ``{"fn": "module:fonction", "kwargs": {...}}``,
+    appelé ``fn(demand, **kwargs) -> dimod.BQM`` ; remplace l'objectif du kit comme a priori
+    (poids ``beta``). ``None`` : objectif du kit, comportement H1 inchangé.
+    """
     from h1.diagnostics import kit_objective, surrogate_metrics
     from h1.fm import FactorizationMachine, learned_qubo, make_target, topologies_to_X
     from h1.samplers import sa_sampler
 
+    prior_bqm = _load_prior(prior, demand)
     n = len(demand)
     arcs_list = qt.all_arcs(n)
     n_vars = len(arcs_list)
@@ -139,7 +146,7 @@ def h1_fm(
     def diagnose(suffix: str) -> None:
         if testset is None or fm is None:
             return
-        _, obj = learned_qubo(fm, demand, lam, beta)
+        _, obj = learned_qubo(fm, demand, lam, beta, prior_bqm)
         m = surrogate_metrics(obj, testset[0], testset[1], n)
         out[f"spearman_rho{suffix}"] = _f(m.get("spearman_rho"))
         out[f"top10_precision{suffix}"] = _f(m.get("top10_precision"))
@@ -172,7 +179,7 @@ def h1_fm(
                 from h1 import pce
 
                 qsampler = pce.make_pce_sampler(**quantum)
-            full, _ = learned_qubo(fm, demand, lam, beta)
+            full, _ = learned_qubo(fm, demand, lam, beta, prior_bqm)
             t0 = time.perf_counter()
             batch = (qsampler if use_q else sa)(full, seed * 1_000_003 + r)
             out["sample_time_s"] += time.perf_counter() - t0
@@ -230,6 +237,17 @@ def h1_fm(
     out["fit_time_s"] = round(out["fit_time_s"], 3)
     out["sample_time_s"] = round(out["sample_time_s"], 3)
     return out
+
+
+def _load_prior(prior: dict[str, Any] | None, demand: np.ndarray):
+    """BQM a priori de ``{"fn": "module:fonction", "kwargs": {...}}`` (import dynamique) ou None."""
+    if prior is None:
+        return None
+    import importlib
+
+    module, _, name = prior["fn"].partition(":")
+    fn = getattr(importlib.import_module(module), name)
+    return fn(demand, **prior.get("kwargs", {}))
 
 
 def _f(x: Any) -> float | None:

@@ -157,10 +157,17 @@ class FactorizationMachine:
 
 
 def learned_qubo(
-    fm: FactorizationMachine, demand: np.ndarray, lam: float, beta: float = 0.0
+    fm: FactorizationMachine,
+    demand: np.ndarray,
+    lam: float,
+    beta: float = 0.0,
+    prior_bqm: dimod.BinaryQuadraticModel | None = None,
 ) -> tuple[dimod.BinaryQuadraticModel, dimod.BinaryQuadraticModel]:
-    """``(full, objective)`` : objectif FM sans offset normalisé à max|coeff| = 1, plus β·objectif du
-    kit (a priori, lui aussi à max|coeff| = 1 ; β = 0 : FM seule), puis + λ·pénalité."""
+    """``(full, objective)`` : objectif FM sans offset normalisé à max|coeff| = 1, plus β·a priori
+    (β = 0 : FM seule), puis + λ·pénalité.
+
+    L'a priori est ``prior_bqm`` s'il est fourni (crochet H2, variables ``0..N-1`` dans l'ordre de
+    ``qt.all_arcs``), sinon l'objectif du kit (à max|coeff| = 1), comme avant."""
     objective = fm.to_bqm()
     objective.offset = 0.0
     lin, (_, _, quad), _ = objective.to_numpy_vectors()
@@ -168,8 +175,9 @@ def learned_qubo(
     if scale > 0:
         objective.scale(1.0 / scale)
     kit, penalty, _ = qt.build_network_qubo(demand)
+    prior = kit if prior_bqm is None else prior_bqm
     if beta:
-        objective.update(kit * beta)
+        objective.update(prior * beta)
     full = objective.copy()
     full.update(penalty * lam)
     return full, objective
