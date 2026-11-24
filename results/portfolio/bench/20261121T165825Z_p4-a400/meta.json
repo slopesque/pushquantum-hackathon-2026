@@ -1,0 +1,14 @@
+{
+  "set": "a400",
+  "methods": [
+    "ls-single",
+    "ls-full-b20"
+  ],
+  "seeds": 1,
+  "time_limit": 600.0,
+  "label": "p4-a400",
+  "git": "c1f7430",
+  "timestamp": "20261121T165825Z",
+  "total_time_s": 67.08,
+  "n_runs": 16
+}

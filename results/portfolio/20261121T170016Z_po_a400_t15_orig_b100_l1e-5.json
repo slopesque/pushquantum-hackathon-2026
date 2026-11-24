@@ -1,0 +1,19 @@
+{
+  "instance": "po_a400_t15_orig",
+  "budget": 100,
+  "lambda": "1e-5",
+  "n_vars": 36165,
+  "n_vars_int": 6000,
+  "max_qubits": 0,
+  "score": -3898367,
+  "best_known": null,
+  "method": "ls-full-b20",
+  "params": {
+    "time_limit": 600.0
+  },
+  "seed": 0,
+  "bench_dir": "results/portfolio/bench/20261121T165825Z_p4-a400",
+  "git": "c1f7430",
+  "timestamp": "20261121T170016Z",
+  "sol_file": "20261121T170016Z_po_a400_t15_orig_b100_l1e-5.sol"
+}

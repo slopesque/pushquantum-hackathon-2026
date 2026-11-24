@@ -63,7 +63,9 @@ Tables des meilleurs connus :
 
 1. **`references/` est en lecture seule.** C'est le kit original de Qoro. `references/qoblib_tools.py` est
    **l'arbitre** (portage des checkers officiels de QOBLIB) : on ne le modifie jamais. On l'importe via
-   `from hackathon.referee import qt`.
+   `from hackathon.referee import qt`, **uniquement dans les tests et pour valider les `.sol` à rendre**.
+   Les solveurs travaillent sur notre propre formulation du problème, sans dépendre de l'arbitre ni
+   chercher à le reproduire.
 2. **Toujours comparer à une baseline classique** (SA, repair, recherche locale) avant d'attribuer un gain
    au quantique. Le kit insiste : le classique fait l'essentiel du travail.
 3. **Un résultat non reproductible ne compte pas.** Chaque run passe par `hackathon.utils.save_run`, qui
@@ -86,15 +88,36 @@ pushquantum-hackathon-2026/
 ├── src/hackathon/           # Notre code réutilisable, installé en mode éditable par `uv sync`
 │   ├── referee.py                   # `from hackathon.referee import qt` : importe l'arbitre sans le copier
 │   ├── utils.py                     # .env, make_backend(), gap(), save_run(), git_hash()
-│   └── solvers/                     # Un module par problème : portfolio.py (branches portfolio/*),
-│                                    #   network.py (branches network/*). Code partagé dans utils.py.
+│   └── solvers/                     # Un sous-paquet par problème. Code partagé dans utils.py.
+│       ├── portfolio/               #   Branches portfolio/*
+│       │   ├── problem.py           #   Notre formulation : données, coefficients, objectif, .sol (P1)
+│       │   ├── evaluator.py         #   Évaluateur incrémental des mouvements (P2)
+│       │   ├── local_search.py      #   Recherche locale : blocs, paires, échanges (P4)
+│       │   ├── lns.py               #   LNS : fenêtres, QUBO à signe fixé, sous-solveurs (enum, SA, QAOA, PCE) (P7)
+│       │   ├── methods.py           #   Méthodes enregistrées pour le banc d'essai (ls-single, ls-full…)
+│       │   ├── benchmark.py         #   Grille des cas, meilleurs connus, registre des méthodes (P3)
+│       │   └── plots.py             #   Graphes des benchmarks (P3)
+│       └── network/                 #   Branches network/*
 ├── notebooks/               # Explorations (marimo de préférence, jupyter accepté)
 │                            #   Les copies des notebooks de référence y sont ignorées par git
-├── scripts/                 # Runs reproductibles en CLI, par ex.
-│                            #   `uv run scripts/run_portfolio.py --instance po_a010_t10_orig --seed 0`
-├── results/                 # Sorties des runs, COMMITÉES
+├── scripts/                 # Runs reproductibles en CLI
+│   ├── bench_portfolio.py           # Benchmark de méthodes (+ validation et sauvegarde des .sol)
+│   └── plot_portfolio_bench.py      # Retracer / comparer des benchmarks
+├── results/                 # Sorties des runs, COMMITÉES (sauf les PNG des benchmarks)
 │   ├── portfolio/                   # <timestamp>_<nom officiel>.sol + .json de métadonnées
+│   │   └── bench/                   #   Un dossier par benchmark : runs.csv, summary.md, meta.json
 │   └── network/
+├── formalisations/          # Documents Typst (PDF), même setup que nos autres projets
+│   ├── justfile                     # `just portfolio`, `just all`, `just preview <fichier>`, `just clean`
+│   ├── template_article/            # Template d'article (ne pas modifier sans raison)
+│   ├── _commun.typ                  # Boîtes partagées : keybox, enbref, warnbox
+│   ├── .base/base.typ               # Squelette à copier pour un nouveau document
+│   └── portfolio/
+│       ├── pipeline_base.typ        # Pipeline de résolution du kit Qoro, étape par étape
+│       ├── pistes.typ               # Pistes explorées (P1–P10) et leur état : À TENIR À JOUR
+│       ├── lns.typ                  # LNS expliqué et formalisé, expériences et résultats (P7, P8)
+│       └── notes.typ                # Journal : constats, mises en garde, questions ouvertes (daté)
+│                                    #   PDF générés dans formalisations/out/ (ignoré par git)
 ├── tests/                   # pytest : l'arbitre reproduit les références, nos .sol sont valides
 ├── .env.example             # Modèle pour .env (QORO_API_KEY)
 ├── pyproject.toml / uv.lock # Dépendances (uv), Python 3.12
@@ -105,7 +128,7 @@ pushquantum-hackathon-2026/
 
 - **On explore, on visualise :** `notebooks/`. Un notebook importe depuis `hackathon.*` et ne contient
   pas de logique qui doive être réutilisée ailleurs.
-- **Ça marche et ça resservira :** on le déplace dans `src/hackathon/solvers/<problème>.py` (ou dans
+- **Ça marche et ça resservira :** on le déplace dans `src/hackathon/solvers/<problème>/` (ou dans
   `utils.py` si ça sert aux deux problèmes).
 - **Un run qu'on veut pouvoir rendre :** un script dans `scripts/` qui appelle les solveurs et termine par
   `save_run(...)`.
@@ -125,6 +148,55 @@ Le nom officiel du `.sol` doit être conservé, car l'arbitre en déduit l'insta
 - network : `network<NN>.sol` (par ex. `network12.sol`).
 
 Vérifier un fichier avant de le rendre : voir la section *Scoring* de `references/README.md`.
+`save_run` préfixe le nom par un horodatage : **le retirer au moment de rendre le fichier**.
+
+### Benchmarks (portefeuille)
+
+Toute nouvelle méthode s'enregistre avec `@register("nom")` (`solvers/portfolio/benchmark.py`) et se mesure
+avec le banc d'essai, **jamais au cas par cas** :
+
+```bash
+uv run scripts/bench_portfolio.py --set dev --methods empty ls --seeds 3 --time 10 --label essai
+uv run scripts/bench_portfolio.py --set full --methods ls --save-sol   # valide + sauvegarde les .sol
+uv run scripts/plot_portfolio_bench.py results/portfolio/bench/<run1> results/portfolio/bench/<run2> \
+    --out results/portfolio/bench/compare --label "run1 vs run2"
+```
+
+- Jeux de cas (`--set`) : `dev` (12 cas, quelques minutes), `hard` (9 cas à grand λ), `a010`, `a050`, `known` (avec meilleur connu),
+  `large` (a200 + a400), `a400`, `full` (256 cas).
+- Sorties : `results/portfolio/bench/<date>_<label>/` avec `runs.csv`, `summary.md`, `meta.json` et les
+  graphes PNG (`gap_by_case`, `gap_vs_lambda`, `time_by_case`, et `size_vs_time` / `size_vs_gap` : taille
+  de l'instance en fonction du temps ou du gap, un point par exécution, symbole = méthode, couleur = λ).
+  On commite le CSV, le résumé et les métadonnées ; les PNG sont ignorés par git et se régénèrent depuis
+  `runs.csv`. Une figure à garder est copiée dans `formalisations/portfolio/figures/`.
+- Vue d'ensemble de toutes les optimisations : `uv run scripts/plot_portfolio_bench.py --all` réunit tous les
+  runs sur un seul graphe (`results/portfolio/bench/all/`). Une méthode = une configuration d'optimisations :
+  donner un nom distinct à chaque nouvelle variante pour qu'elle ait son propre symbole.
+- Seul `--save-sol` utilise l'arbitre, pour valider les `.sol` avant de les enregistrer.
+
+**Comment ça marche** (`benchmark.py`, `plots.py`, `scripts/bench_portfolio.py`) :
+
+1. **Cas.** Un `Case` = une instance + un λ ; le budget en découle (`BUDGET_BY_ASSETS`). `SETS` regroupe
+   les jeux prédéfinis ; `grid()` en construit d'autres.
+2. **Données.** `ProblemCache` charge chaque instance une seule fois (cache disque `data/qoblib/`) et
+   construit un `PortfolioProblem` par λ.
+3. **Méthodes.** `METHODS` est un registre nom → fonction `(problem, rng, time_limit) → v`, rempli par
+   `@register("nom")`. Les méthodes vivent dans `methods.py`, que `run_benchmark` importe : une nouvelle
+   méthode s'y ajoute (ou dans un module importé par `methods.py`). `rng = np.random.default_rng(seed)` : un run est reproductible à seed
+   égale. La méthode doit respecter `time_limit` et rendre une solution **faisable**.
+4. **Exécution.** `run_benchmark` lance chaque (cas, méthode, seed), chronomètre, note la solution avec
+   **notre** modèle (`problem.objective`, `is_feasible`) et calcule le gap au meilleur connu
+   (`best_known_table()`, lue une fois dans le README de QOBLIB). Un `Run` par exécution.
+5. **Agrégation.** `summarize` regroupe par (cas, méthode) : meilleur score faisable, médiane, gaps.
+6. **Sorties.** Le script écrit `runs.csv` (`write_csv` / `read_csv` font l'aller-retour), `summary.md`,
+   `meta.json`, puis les graphes (`plot_all`).
+7. **Validation finale** (`--save-sol` seulement). Pour chaque cas, la meilleure solution est écrite en
+   `.sol` (`problem.solution_text`), relue et notée par l'arbitre ; si l'arbitre ne confirme pas le score,
+   le script s'arrête. Sinon le fichier est enregistré par `save_run`.
+
+Conventions des graphes (`plots.py`) : couleurs de la palette catégorielle validée (daltonisme), attribuées
+aux méthodes dans l'ordre d'apparition, plus une forme de marqueur par méthode ; au plus 8 méthodes par
+graphe. Un cas sans meilleur connu est marqué † et son gap est relatif au meilleur score du graphe.
 
 ## 3. Environnement et commandes
 
@@ -159,6 +231,13 @@ conséquence.
 
 - Messages au format **Conventional Commits** : `type(scope): description`, par ex.
   `feat(portfolio): add PCE pipeline`, `chore(uv): pin python 3.12`, `fix(network): repair degree constraint`.
+  Types usuels : `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `chore`, `ci`.
+- **Commits atomiques :** un commit = un seul changement logique, qui se comprend et se revert seul.
+  - Ne pas mélanger dans un même commit : code et documentation sans rapport, refactor et nouvelle
+    fonctionnalité, changements de dépendances et code applicatif, portefeuille et network.
+  - Si un fichier contient plusieurs changements indépendants (par ex. `pyproject.toml` + `uv.lock`), les
+    séparer en commits successifs, avec `uv lock` à chaque étape pour que chaque commit reste cohérent.
+  - Chaque commit doit laisser le repo dans un état qui fonctionne (`uv sync`, `uv run pytest`).
 - **Ne pas signer les commits :** pas de trailer `Co-Authored-By:`, pas de mention « Generated with … »
   ni d'autre attribution IA dans les messages de commit ou les descriptions de PR, et pas de signature
   GPG (`-S`). Le commit est écrit au nom de l'auteur git configuré, sans rien ajouter.
